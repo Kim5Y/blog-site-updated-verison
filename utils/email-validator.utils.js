@@ -6,9 +6,8 @@ export default async (userEmail) => {
     const response = await axios.get(
       `https://emailreputation.abstractapi.com/v1/?api_key=${API_KEY}&email=${userEmail}`
     );
-    const data = JSON.parse(response);
-    console.log(data);
+    return response;
   } catch (error) {
-    return console.log(error);
+    return console.log("from function :", error);
   }
 };
