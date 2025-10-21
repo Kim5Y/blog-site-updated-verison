@@ -12,12 +12,7 @@ const transporter = nodemailer.createTransport({
 const sendCode = async (email) => {
   try {
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    console.log(otp);
     const expires = new Date(Date.now() + 5 * 60 * 1000);
-    // await pool.query(
-    //   "UPDATE users SET otp_code = $1, otp_expires = $2 WHERE email = $3",
-    //   [otp, expires, email]
-    // );
     const sendCodeTOEmail = await transporter.sendMail({
       from: env.MAILER_EMAIL,
       to: email,

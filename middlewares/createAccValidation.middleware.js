@@ -1,6 +1,6 @@
 import { body, validationResult } from "express-validator";
 
-export default [
+export const createAccountValidation =  [
   body("username")
     .trim()
     .notEmpty()
@@ -39,6 +39,32 @@ export default [
         message: err.msg,
       }));
       return res.status(400).json({ errors: formattedError });
+    }
+    next();
+  },
+];
+
+export const verifyOtpValidator = [
+  body("email")
+    .trim()
+    .notEmpty()
+    .withMessage("Email is required")
+    .isEmail()
+    .withMessage("Invalid email format"),
+
+  body("otpCode")
+    .trim()
+    .notEmpty()
+    .withMessage("OTP code is required")
+    .isLength({ min: 6, max: 6 })
+    .withMessage("OTP code must be 6 digits")
+    .isNumeric()
+    .withMessage("OTP code must contain only numbers"),
+
+  (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
     }
     next();
   },
