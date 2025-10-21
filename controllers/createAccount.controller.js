@@ -115,6 +115,7 @@ export const verifyOtp = async (req, res) => {
       secure: false,
       sameSite: "strict",
     });
+    await client.del(email);
     return res.status(201).json({ error: true, token: accessToken });
   } catch (err) {
     console.log(err);
@@ -123,13 +124,5 @@ export const verifyOtp = async (req, res) => {
       message: err.message,
       code: "INTERNAL SERVER ERROR",
     });
-  }
-};
-
-export const login = async (req, res) => {
-  try {
-  } catch (err) {
-    console.log(err);
-    return res.status(500).json({ error: true, message: err.message });
   }
 };
