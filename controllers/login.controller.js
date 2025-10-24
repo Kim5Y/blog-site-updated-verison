@@ -15,7 +15,6 @@ export const login = async (req, res) => {
       "SELECT * FROM users WHERE email = $1",
       [email]
     );
-    console.log(isUserExists.rows[0]);
     if (isUserExists.rowCount <= 0)
       return res.status(404).json({ error: true, message: "user not found" });
     const user = isUserExists.rows[0];
@@ -28,13 +27,14 @@ export const login = async (req, res) => {
     };
     const accessToken = generateAccessToken(payload);
     const refreshToken = generateRefreshToken(payload);
+    const hashedRefreshedToken = await bcrypt.hash(refreshToken, 8);
     await pool.query(
       `UPDATE users SET refresh_token = array_append(refresh_token, $1) WHERE email = $2`,
-      [refreshToken, email]
+      [hashedRefreshedToken, email]
     );
     res.cookie("refresh_token", refreshToken, {
       httpOnly: true,
-      secure: true, //this may be the issue
+      secure: false, //this may be the issue
       sameSite: "strict",
     });
     return res.status(201).json({ error: false, token: accessToken });

@@ -38,6 +38,7 @@ export const sendOtp = async (req, res) => {
     //     message: "invalid email, try another email address",
     //   });
     const otpData = await sendCode(email);
+    console.log(otpData)
     const newUser = {
       username,
       password,
@@ -106,13 +107,14 @@ export const verifyOtp = async (req, res) => {
     const id = result.rows[0];
     const accessToken = generateAccessToken(id);
     const refreshToken = generateRefreshToken(id);
+    const hashedRefreshedToken = await bcrypt.hash(refreshToken, 8);
     await pool.query(
       `UPDATE users SET refresh_token = array_append(refresh_token, $1) WHERE email = $2`,
-      [refreshToken, email]
+      [hashedRefreshedToken, email]
     );
     res.cookie("refresh_token", refreshToken, {
       httpOnly: true,
-      secure: false,
+      secure: false, //this may also be the cause
       sameSite: "strict",
     });
     await client.del(email);
