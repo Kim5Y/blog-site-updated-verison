@@ -8,9 +8,9 @@ import {
   verifyOtpValidator,
   loginValidator,
 } from "../middlewares/createAccValidation.middleware.js";
-const authRouter = express.Router();
-authRouter.post("/send-otp", createAccountValidation, sendOtp);
-authRouter.post("/verify-otp", verifyOtpValidator, verifyOtp);
-authRouter.post("/login", loginValidator, login);
-authRouter.post("/refresh", verifyUser, refreshTokens);
-export default authRouter;
+const AccountsRouter = express.Router();
+AccountsRouter.post("/send-otp", createAccountValidation, sendOtp);
+AccountsRouter.post("/verify-otp", verifyOtpValidator, verifyOtp);
+AccountsRouter.post("/login", loginValidator, login);
+AccountsRouter.post("/refresh", verifyUser, refreshTokens);
+export default AccountsRouter;
