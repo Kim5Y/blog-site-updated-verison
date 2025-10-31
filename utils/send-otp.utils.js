@@ -1,0 +1,34 @@
+import nodemailer from "nodemailer";
+import env from "../config/env.js";
+// import pool from "../config/db.config.js";
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: env.MAILER_EMAIL,
+    pass: env.MAILER_PASSWORD,
+  },
+});
+
+const sendCode = async (email) => {
+  try {
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const expires = new Date(Date.now() + 5 * 60 * 1000);
+    const sendCodeTOEmail = await transporter.sendMail({
+      from: env.MAILER_EMAIL,
+      to: email,
+      subject: "Your OTP Code from our blogging site",
+      text: `Your verification code is ${otp}. It expires in 5 minutes.`,
+    });
+
+    if (sendCodeTOEmail) {
+      console.log("code successfully sent")
+      return {
+        code: otp,
+        expires,
+      };
+    }
+  } catch (error) {
+    return error;
+  }
+};
+export default sendCode;

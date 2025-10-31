@@ -1,0 +1,27 @@
+✅ Success
+
+200 → OK (everything worked)
+
+201 → Created (new resource made, e.g. user registered, post added)
+
+204 → No Content (successful, but nothing to return — e.g. delete)
+
+⚠️ Client Errors
+
+400 → Bad Request (user sent invalid data)
+
+401 → Unauthorized (no or bad token)
+
+403 → Forbidden (valid token, but not allowed — e.g. deleting someone else’s post)
+
+404 → Not Found (user, post, or route doesn’t exist)
+
+409 → Conflict (e.g. duplicate email or username)
+
+422 → Unprocessable Entity (validation failed, like invalid email format)
+
+💥 Server Errors
+
+500 → Internal Server Error (something exploded on your end)
+
+503 → Service Unavailable (database down, maintenance mode)
