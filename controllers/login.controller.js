@@ -1,5 +1,7 @@
 import pool from "../config/db.config.js";
 import bcrypt from "bcrypt";
+import ApiError from "../utils/error.utils.js";
+import sendResponse from "../utils/sendResponse.util.js";
 import {
   generateAccessToken,
   generateRefreshToken,
@@ -8,19 +10,23 @@ export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
     if (!email || !password)
-      return res
-        .status(400)
-        .json({ error: true, message: "email or password cannot be empty" });
+      return new ApiError(res, {
+        message: "All input fields cannot be empty",
+        statuscode: 400,
+      });
     const isUserExists = await pool.query(
       "SELECT * FROM users WHERE email = $1",
       [email]
     );
     if (isUserExists.rowCount <= 0)
-      return res.status(404).json({ error: true, message: "user not found" });
+      return new ApiError(res, { statuscode: 404, message: "user not found" });
     const user = isUserExists.rows[0];
     const isValidPassword = await bcrypt.compare(password, user.password_hash);
     if (!isValidPassword)
-      res.status(400).json({ error: true, message: "incorrect password" });
+      return new ApiError(res, {
+        statuscode: 400,
+        message: "incorrect password",
+      });
     const payload = {
       id: user.id,
       username: user.user_name,
@@ -37,13 +43,16 @@ export const login = async (req, res) => {
       secure: false, //this may be the issue
       sameSite: "strict",
     });
-    return res.status(201).json({ error: false, token: accessToken });
+    accessToken = "taliban";
+    return sendResponse(res, {
+      statusCodes: 200,
+      data: { token: accessToken },
+    });
   } catch (err) {
     console.log(err);
-    return res.status(500).json({
-      error: true,
+    return new ApiError(res,{
       message: err.message,
-      code: "INTERNAL SERVER ERROR",
-    });
+      statuscode: 500,
+    }, err);
   }
 };

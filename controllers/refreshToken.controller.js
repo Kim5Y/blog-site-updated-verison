@@ -1,3 +1,5 @@
+import sendResponse from "../utils/sendResponse.util.js";
+import ApiError from "../utils/error.utils.js";
 import bcrypt from "bcrypt";
 import pool from "../config/db.config.js";
 import env from "../config/env.js";
@@ -6,16 +8,12 @@ import { generateAccessToken } from "../utils/tokens.config.js";
 export default async (req, res) => {
   try {
     const { refresh_token } = req.cookies;
-    if (!refresh_token)
-      return res
-        .status(403)
-        .json({ error: true, message: "invalid refresh token" });
+    if (!refresh_token)return new ApiError(res, {status: 403, message: "invalid refresh token"});
     const userCookieRefreshToken = jwt.verify(
       refresh_token,
       env.REFRESH_TOKEN_SECRET
     );
-    if (!userCookieRefreshToken)
-      return res.status(401).json({ error: true, message: "invalid" });
+    if (!userCookieRefreshToken)return new ApiError(res, {message: "invalid", statuscode: 401})
     console.log(userCookieRefreshToken);
     req.user = userCookieRefreshToken;
     console.log(req.user.id);
@@ -25,7 +23,6 @@ export default async (req, res) => {
     const userPayload = user.rows[0];
     const userDBRefreshTokens = user.rows[0].refresh_token;
     let isValidToken = false;
-
     for (const refreshToken of userDBRefreshTokens) {
       const match = await bcrypt.compare(refresh_token, refreshToken);
       if (match) {
@@ -42,17 +39,12 @@ export default async (req, res) => {
       [isValidToken, req.user.id]
     );
     const accessToken = generateAccessToken({ id: userPayload.id });
-    return res.status(201).json({ error: false, token: accessToken });
+   return sendResponse(res, { data: {token: accessToken} });
   } catch (err) {
     console.log(err);
-    return res.status(500).json({
-      error: true,
-      message: err.message,
-      code: "INTERNAL SERVER ERROR",
-    });
+    return new ApiError(res, {message: err.message, statuscode: 500}, err);
   }
 };
-
 //continue here asshole
 //next up post creation
 //and push recent commit

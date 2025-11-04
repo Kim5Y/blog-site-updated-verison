@@ -1,10 +1,14 @@
 class ApiError extends Error {
-  constructor({
-    statuscode,
-    message = "something went wrong",
-    errors = [],
-    stack = "",
-  } = {}) {
+  constructor(
+    res,
+    {
+      statuscode = 500,
+      message = "something went wrong",
+      errors = {},
+      stack = null,
+    } = {},
+    err,
+  ) {
     super(message);
     this.statuscode = statuscode;
     this.data = null;
@@ -16,6 +20,27 @@ class ApiError extends Error {
     } else {
       Error.captureStackTrace(this, this.constructor);
     }
+    console.log("out side error", err);
+    const normalizeError = () => {
+      if (!err) return{
+        success:this.success,
+        message: this.message
+      };
+      if (err instanceof Error) {
+        const { name, message, stack, cause, ...rest } = err;
+        const errMessage = message? message: this.message;
+        return {success: this.success,name, message: errMessage, }
+      }
+    };
+    console.log(normalizeError());
+    // const response = {
+    //   success: this.success,
+    //   message: this.message,
+    //   data: this.data,
+    //   errors: this.errors,
+    //   stack: stack && this.stack,
+    // };
+    return res.status(statuscode).json(normalizeError());
   }
 }
 export default ApiError;
