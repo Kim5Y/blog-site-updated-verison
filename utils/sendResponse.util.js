@@ -9,6 +9,6 @@ const sendResponse = (
   } = {}
 ) => {
   const response = { success, message, data };
-  return res.status(statusCodes).json(response, ...(meta && { meta }));
+  return res.status(statusCodes).json({response, ...(meta && { meta })});
 };
 export default sendResponse;

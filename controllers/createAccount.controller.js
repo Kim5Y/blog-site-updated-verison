@@ -1,5 +1,7 @@
 import bcrypt from "bcrypt";
 import { client } from "../config/redis.config.js";
+import ApiError from "../utils/error.utils.js";
+import sendResponse from "../utils/sendResponse.util.js";
 import sendCode from "../utils/send-otp.utils.js";
 import {
   generateAccessToken,
@@ -11,24 +13,29 @@ export const sendOtp = async (req, res) => {
   try {
     const { username, email, password } = req.body;
     if (!username || !email || !password)
-      return res
-        .status(400)
-        .json({ error: true, message: "input fields cannot be empty" });
+      return new ApiError(res, {
+        statuscode: 400,
+        message: "input field cannot be empty",
+      });
     if (await client.get(email)) await client.del(email);
     const usernameExists = await pool.query(
       "SELECT * FROM users WHERE user_name = $1 ",
       [username]
     );
     if (usernameExists.rowCount > 0)
-      return res.status(400).json({ error: true, message: "invalid username" });
+      return new ApiError(res, {
+        statuscode: 400,
+        message: "invalid username",
+      });
     const emailExists = await pool.query(
       "SELECT * FROM users WHERE email = $1 ",
       [email]
     );
     if (emailExists.rowCount > 0)
-      return res
-        .status(400)
-        .json({ error: true, message: "invalid credentials" });
+      return new ApiError(res, {
+        message: "invalid email address please use another email address",
+        statuscode: 400,
+      });
     // const emailResponse = await validateEmail(email);
     // const isValidEmail = await emailResponse.data.email_risk
     //   .address_risk_status;
@@ -38,7 +45,7 @@ export const sendOtp = async (req, res) => {
     //     message: "invalid email, try another email address",
     //   });
     const otpData = await sendCode(email);
-    console.log(otpData)
+    console.log(otpData);
     const newUser = {
       username,
       password,
@@ -47,46 +54,50 @@ export const sendOtp = async (req, res) => {
     const savedOtpData = await client.set(email, JSON.stringify(newUser), {
       EX: 360,
     });
-    if (savedOtpData) {
-      return res.status(201).json({
-        error: false,
-        message: `OTP code successfully sent to ${email}, expires in 6minutes`,
+    if (!savedOtpData)
+      return new ApiError(res, {
+        message: "failed to send OTP code",
+        statuscode: 404,
       });
-    } else {
-      return res
-        .status(404)
-        .json({ error: true, message: "failed to send otp code" });
-    }
+    return sendResponse(res, {
+      message: `OTP code successfully sent to ${email}, expires in 6minutes`,
+      statusCodes: 201,
+    });
   } catch (err) {
     console.log(err);
-    return res.status(500).json({
-      error: true,
+    return new ApiError(res, {
+      statuscode: 500,
       message: err.message,
-      code: "INTERNAL SERVER ERROR",
-    });
+      errors: err,
+    }, err);
   }
 };
 export const verifyOtp = async (req, res) => {
   try {
     const { email, otpCode } = req.body;
     if (!email || !otpCode)
-      return res
-        .status(400)
-        .json({ error: true, message: "email and otp code cannot be empty" });
+      return new ApiError(res, {
+        statuscode: 400,
+        message: "input cannot be empty",
+      });
     const getDetails = await client.get(email);
     if (!getDetails)
-      return res
-        .status(404)
-        .json({ error: true, message: "OTP code has expired" });
+      return new ApiError(res, {
+        message: "OTP code has expired ",
+        statuscode: 401,
+      });
     const userData = JSON.parse(getDetails);
     const otpCodeHasExpired = new Date(userData.otpData.expires) < new Date();
     if (otpCodeHasExpired)
-      return res
-        .status(400)
-        .json({ error: true, message: "otp code has expired" });
+      return new ApiError(res, {
+        message: "OTP code has expired",
+        statuscode: 401,
+      });
     if (otpCode !== userData.otpData.code)
-      return res.status(400).json({ error: true, message: "invalid code" });
-
+      return new ApiError(res, {
+        statuscode: 400,
+        message: "invalid OTP code",
+      });
     const hashedPassword = await bcrypt.hash(userData.password, 10);
     const newValidUser = {
       user_name: userData.username,
@@ -100,10 +111,10 @@ export const verifyOtp = async (req, res) => {
       newValidUser.email,
     ];
     const result = await pool.query(query, values);
-    if (result.rowCount <= 0)
-      return res
-        .status(500)
-        .json({ error: true, message: "fail to add user to db" });
+    // if (result.rowCount <= 0)
+    //   return res
+    //     .status(500)
+    //     .json({ error: true, message: "fail to add user to db" });
     const id = result.rows[0];
     const accessToken = generateAccessToken(id);
     const refreshToken = generateRefreshToken(id);
@@ -114,17 +125,21 @@ export const verifyOtp = async (req, res) => {
     );
     res.cookie("refresh_token", refreshToken, {
       httpOnly: true,
-      secure: false, //this may also be the cause
+      secure: false,
       sameSite: "strict",
     });
     await client.del(email);
-    return res.status(201).json({ error: true, token: accessToken });
+    return sendResponse(res, {
+      statusCodes: 201,
+      message: "user successfully created",
+      data: { token },
+    });
   } catch (err) {
     console.log(err);
     return res.status(500).json({
       error: true,
       message: err.message,
       code: "INTERNAL SERVER ERROR",
-    });
+    }, err);
   }
 };
