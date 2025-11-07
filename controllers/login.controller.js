@@ -43,7 +43,6 @@ export const login = async (req, res) => {
       secure: false, //this may be the issue
       sameSite: "strict",
     });
-    accessToken = "taliban";
     return sendResponse(res, {
       statusCodes: 200,
       data: { token: accessToken },

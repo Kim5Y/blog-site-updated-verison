@@ -11,8 +11,8 @@ import pool from "../config/db.config.js";
 import validateEmail from "../utils/email-validator.utils.js";
 export const sendOtp = async (req, res) => {
   try {
-    const { username, email, password } = req.body;
-    if (!username || !email || !password)
+    const { username, email, password, categories } = req.body;
+    if (!username || !email || !password || !categories)
       return new ApiError(res, {
         statuscode: 400,
         message: "input field cannot be empty",
@@ -50,6 +50,7 @@ export const sendOtp = async (req, res) => {
       username,
       password,
       otpData,
+      categories,
     };
     const savedOtpData = await client.set(email, JSON.stringify(newUser), {
       EX: 360,
@@ -65,11 +66,15 @@ export const sendOtp = async (req, res) => {
     });
   } catch (err) {
     console.log(err);
-    return new ApiError(res, {
-      statuscode: 500,
-      message: err.message,
-      errors: err,
-    }, err);
+    return new ApiError(
+      res,
+      {
+        statuscode: 500,
+        message: err.message,
+        errors: err,
+      },
+      err
+    );
   }
 };
 export const verifyOtp = async (req, res) => {
@@ -123,6 +128,11 @@ export const verifyOtp = async (req, res) => {
       `UPDATE users SET refresh_token = array_append(refresh_token, $1) WHERE email = $2`,
       [hashedRefreshedToken, email]
     );
+    const userCategories = getDetails.categories;
+    await pool.query(
+      `UPDATE users SET categories  = array_append(categories, $1) WHERE user_id = $2`,
+      [userCategories, id.id]
+    );
     res.cookie("refresh_token", refreshToken, {
       httpOnly: true,
       secure: false,
@@ -132,14 +142,18 @@ export const verifyOtp = async (req, res) => {
     return sendResponse(res, {
       statusCodes: 201,
       message: "user successfully created",
-      data: { token },
+      data: { token: accessToken },
     });
   } catch (err) {
     console.log(err);
-    return res.status(500).json({
-      error: true,
-      message: err.message,
-      code: "INTERNAL SERVER ERROR",
-    }, err);
+    return new ApiError(
+      res,
+      {
+        statuscode: 500,
+        message: err.message,
+        errors: err,
+      },
+      err
+    );
   }
 };
