@@ -40,7 +40,7 @@ export const login = async (req, res) => {
     );
     res.cookie("refresh_token", refreshToken, {
       httpOnly: true,
-      secure: false, //this may be the issue
+      secure: false, //commot this line
       sameSite: "strict",
     });
     return sendResponse(res, {

@@ -9,6 +9,7 @@ import {
 } from "../utils/tokens.config.js";
 import pool from "../config/db.config.js";
 import validateEmail from "../utils/email-validator.utils.js";
+const allowedCategories = ["tech", "lifestyle", "health", "travel", "food"];
 export const sendOtp = async (req, res) => {
   try {
     const { username, email, password, categories } = req.body;
@@ -16,6 +17,11 @@ export const sendOtp = async (req, res) => {
       return new ApiError(res, {
         statuscode: 400,
         message: "input field cannot be empty",
+      });
+    if (!allowedCategories.includes(categories.toLowerCase()))
+      return new ApiError(res, {
+        statuscode: 400,
+        message: "invalid category",
       });
     if (await client.get(email)) await client.del(email);
     const usernameExists = await pool.query(
@@ -108,31 +114,30 @@ export const verifyOtp = async (req, res) => {
       user_name: userData.username,
       password_hash: hashedPassword,
       email: email,
+      categories: userData.categories,
     };
-    const query = `INSERT INTO users (user_name, password_hash, email) VALUES ($1, $2, $3) RETURNING id;`;
+    const query = `INSERT INTO users (user_name, password_hash, email, categories) VALUES ($1, $2, $3, $4) RETURNING id;`;
     const values = [
       newValidUser.user_name,
       newValidUser.password_hash,
       newValidUser.email,
+      newValidUser.categories,
     ];
     const result = await pool.query(query, values);
-    // if (result.rowCount <= 0)
-    //   return res
-    //     .status(500)
-    //     .json({ error: true, message: "fail to add user to db" });
     const id = result.rows[0];
-    const accessToken = generateAccessToken(id);
-    const refreshToken = generateRefreshToken(id);
+    const payload = {
+      id: id.id,
+      user_name: newValidUser.user_name,
+    };
+    const accessToken = generateAccessToken(payload);
+    const refreshToken = generateRefreshToken(payload);
     const hashedRefreshedToken = await bcrypt.hash(refreshToken, 8);
     await pool.query(
       `UPDATE users SET refresh_token = array_append(refresh_token, $1) WHERE email = $2`,
       [hashedRefreshedToken, email]
     );
     const userCategories = getDetails.categories;
-    await pool.query(
-      `UPDATE users SET categories  = array_append(categories, $1) WHERE user_id = $2`,
-      [userCategories, id.id]
-    );
+    console.log(userCategories);
     res.cookie("refresh_token", refreshToken, {
       httpOnly: true,
       secure: false,
