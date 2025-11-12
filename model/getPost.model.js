@@ -1,7 +1,7 @@
 import pool from "../config/db.config.js";
 export const getPaginatedPosts = async (limit, offset) => {
   const query = `
-    SELECT id, title, content, user_id, created_at
+    SELECT id, title, content,slug, user_id, created_at
     FROM posts
     ORDER BY created_at DESC
     LIMIT $1 OFFSET $2

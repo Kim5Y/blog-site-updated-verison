@@ -73,7 +73,7 @@
         },
       });
       // Listen for new posts
-      socket.on("newPost", (post) => {
+      socket.on("post:new", (post) => {
         addPostToDOM(post);
       });
 
@@ -122,7 +122,6 @@
             `;
         postsContainer.prepend(postElement);
       }
-
       // Socket connection status
       socket.on("connect", () => {
         console.log("Connected to server");

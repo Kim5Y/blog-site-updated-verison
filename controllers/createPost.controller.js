@@ -30,7 +30,7 @@ export const createPosts = async (req, res) => {
     const result = await pool.query(query, values);
     const newPost = result.rows[0];
     console.log(newPost);
-    (await io).to(`category-${category}`).emit("newPost", newPost);
+    (await io).to(`category-${category}`).emit("post:new", newPost);
     return sendResponse(res, {
       message: "post created successfully",
       data: { newPost },

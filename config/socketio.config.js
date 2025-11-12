@@ -44,7 +44,7 @@ export const initSocket = async (server, res) => {
 
       userCategories.forEach((category) => {
         socket.join(`category-${category}`);
-        console.log(`user {${isValidUser.user_name}} has joined:`, category);
+        console.log(`user {${isValidUser.username}} has joined:`, category);
       });
       socket.on("disconnect", () => {
         console.log("Socket disconnected:", socket.id);
