@@ -9,20 +9,35 @@ import {
 } from "../utils/tokens.config.js";
 import pool from "../config/db.config.js";
 import validateEmail from "../utils/email-validator.utils.js";
-const allowedCategories = ["tech", "lifestyle", "health", "travel", "food"];
+const allowedCategories = [
+  "tech",
+  "lifestyle",
+  "health",
+  "travel",
+  "food",
+  "sports",
+];
 export const sendOtp = async (req, res) => {
   try {
     const { username, email, password, categories } = req.body;
-    if (!username || !email || !password || !categories)
+    if (!username || !email || !password || !categories) {
       return new ApiError(res, {
         statuscode: 400,
         message: "input field cannot be empty",
       });
-    if (!allowedCategories.includes(categories.toLowerCase()))
+    }
+    console.log(categories);
+    const allValidCategories = categories.every((category) =>
+      allowedCategories.includes(category)
+    );
+
+    if (!allValidCategories) {
       return new ApiError(res, {
         statuscode: 400,
         message: "invalid category",
       });
+    }
+    console.log("all categories are valid");
     if (await client.get(email)) await client.del(email);
     const usernameExists = await pool.query(
       "SELECT * FROM users WHERE user_name = $1 ",

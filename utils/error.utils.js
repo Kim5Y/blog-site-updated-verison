@@ -29,7 +29,7 @@ class ApiError extends Error {
       if (err instanceof Error) {
         const { name, message, stack, cause, ...rest } = err;
         const errMessage = message? message: this.message;
-        return {success: this.success,name, message: errMessage, }
+        return {success: this.success,name, message: errMessage, statuscode: statuscode }
       }
     };
     console.log(normalizeError());

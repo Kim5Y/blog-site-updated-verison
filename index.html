@@ -1,134 +1,136 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Blog Site</title>
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     <style>
-        .post-container {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        .post {
-            border: 1px solid #ddd;
-            margin: 10px 0;
-            padding: 15px;
-            border-radius: 5px;
-        }
-        .category-selector {
-            margin: 20px 0;
-        }
-        .create-post {
-            margin: 20px 0;
-        }
+      .post-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      .post {
+        border: 1px solid #ddd;
+        margin: 10px 0;
+        padding: 15px;
+        border-radius: 5px;
+      }
+      .category-selector {
+        margin: 20px 0;
+      }
+      .create-post {
+        margin: 20px 0;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div class="post-container">
-        <h1>Blog Posts</h1>
+      <h1>Blog Posts</h1>
 
-        <div class="category-selector">
-            <h3>Your Categories</h3>
-            <div id="categoryList"></div>
-        </div>
+      <div class="category-selector">
+        <h3>Your Categories</h3>
+        <div id="categoryList"></div>
+      </div>
 
-        <div class="create-post">
-            <h3>Create New Post</h3>
-            <form id="postForm">
-                <div>
-                    <label for="title">Title:</label><br>
-                    <input type="text" id="title" name="title" required>
-                </div>
-                <div>
-                    <label for="content">Content:</label><br>
-                    <textarea id="content" name="content" rows="4" required></textarea>
-                </div>
-                <div>
-                    <label for="category">Category:</label><br>
-                    <select id="category" name="category" required>
-                        <option value="tech">Tech</option>
-                        <option value="lifestyle">Lifestyle</option>
-                        <option value="health">Health</option>
-                        <option value="travel">Travel</option>
-                        <option value="food">Food</option>
-                    </select>
-                </div>
-                <button type="submit">Create Post</button>
-            </form>
-        </div>
+      <div class="create-post">
+        <h3>Create New Post</h3>
+        <form id="postForm">
+          <div>
+            <label for="title">Title:</label><br />
+            <input type="text" id="title" name="title" required />
+          </div>
+          <div>
+            <label for="content">Content:</label><br />
+            <textarea id="content" name="content" rows="4" required></textarea>
+          </div>
+          <div>
+            <label for="category">Category:</label><br />
+            <select id="category" name="category" required>
+              <option value="tech">Tech</option>
+              <option value="lifestyle">Lifestyle</option>
+              <option value="health">Health</option>
+              <option value="travel">Travel</option>
+              <option value="food">Food</option>
+            </select>
+          </div>
+          <button type="submit">Create Post</button>
+        </form>
+      </div>
 
-        <div id="posts">
-            <!-- Posts will be displayed here -->
-        </div>
+      <div id="posts">
+        <!-- Posts will be displayed here -->
+      </div>
     </div>
 
     <script>
-        // Connect to Socket.IO server
-        const socket = io('http://localhost:8080', {
-            auth: {
-                token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTAsInVzZXJfbmFtZSI6ImtpbSIsImlhdCI6MTc2Mjc4NDcyNywiZXhwIjoxNzYyODcxMTI3fQ.GPsQTUC0i8W1W1F-Laz1NHVwoDbEDuX3Ubg_j1zBp9g' // Replace with actual user ID
+      // Connect to Socket.IO server
+      const socket = io("http://localhost:8080", {
+        auth: {
+          token:
+            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTAsInVzZXJuYW1lIjoia2ltIiwiaWF0IjoxNzYyOTQ2ODg2LCJleHAiOjE3NjMwMzMyODZ9.atROuH9AKMG51Y_W0brmx8zD6e6cFymICNNFZxq5rN4",
+        },
+      });
+      // Listen for new posts
+      socket.on("newPost", (post) => {
+        addPostToDOM(post);
+      });
+
+      // Handle form submission
+      document
+        .getElementById("postForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+
+          const formData = {
+            title: document.getElementById("title").value,
+            content: document.getElementById("content").value,
+            category: document.getElementById("category").value,
+          };
+
+          try {
+            const response = await fetch("/api/posts", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(formData),
+            });
+
+            if (response.ok) {
+              document.getElementById("postForm").reset();
+              alert("Post created successfully!");
+            } else {
+              alert("Error creating post");
             }
+          } catch (error) {
+            console.error("Error:", error);
+            alert("Error creating post");
+          }
         });
 
-        // Listen for new posts
-        socket.on('newPost', (post) => {
-            addPostToDOM(post);
-        });
-
-        // Handle form submission
-        document.getElementById('postForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const formData = {
-                title: document.getElementById('title').value,
-                content: document.getElementById('content').value,
-                category: document.getElementById('category').value
-            };
-
-            try {
-                const response = await fetch('/api/posts', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(formData)
-                });
-
-                if (response.ok) {
-                    document.getElementById('postForm').reset();
-                    alert('Post created successfully!');
-                } else {
-                    alert('Error creating post');
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('Error creating post');
-            }
-        });
-
-        // Function to add a post to the DOM
-        function addPostToDOM(post) {
-            const postsContainer = document.getElementById('posts');
-            const postElement = document.createElement('div');
-            postElement.className = 'post';
-            postElement.innerHTML = `
+      // Function to add a post to the DOM
+      function addPostToDOM(post) {
+        const postsContainer = document.getElementById("posts");
+        const postElement = document.createElement("div");
+        postElement.className = "post";
+        postElement.innerHTML = `
                 <h3>${post.title}</h3>
                 <p>${post.content}</p>
                 <small>Category: ${post.category}</small>
             `;
-            postsContainer.prepend(postElement);
-        };
+        postsContainer.prepend(postElement);
+      }
 
-        // Socket connection status
-        socket.on('connect', () => {
-            console.log('Connected to server');
-        });
+      // Socket connection status
+      socket.on("connect", () => {
+        console.log("Connected to server");
+      });
 
-        socket.on('disconnect', () => {
-            console.log('Disconnected from server');
-        });
+      socket.on("disconnect", () => {
+        console.log("Disconnected from server");
+      });
     </script>
-</body>
+  </body>
 </html>
