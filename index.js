@@ -23,16 +23,18 @@ const server = http.createServer(app);
 //     methods: ["GET", "POST"],
 //   },
 // });
+    const IO = initSocket(server);
 
-export const getIO = (res) => {
+app.use((req, res, next) => {
   try {
-    const IO = initSocket(server, res);
     if (!IO) throw new Error("Socket.io not initialized!");
-    return IO;
+   req.io = IO;
   } catch (err) {
     return new ApiError(res, { errors: err.message }, err);
   }
-};
+  next();
+});
+
 app.use(cookieParser());
 app.use(express.json());
 app.use(cors());

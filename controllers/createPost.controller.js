@@ -1,5 +1,5 @@
 import ApiError from "../utils/error.utils.js";
-import { getIO } from "../index.js";
+// import { getIO } from "../index.js";
 import pool from "../config/db.config.js";
 import slugify from "slugify";
 import sendResponse from "../utils/sendResponse.util.js";
@@ -7,7 +7,6 @@ const allowedCategories = ["tech", "lifestyle", "health", "travel", "food"];
 
 export const createPosts = async (req, res) => {
   try {
-    const io = getIO();
     const { title, content, category, image } = req.body;
     if (!title || !content || !category)
       return new ApiError(res, {
@@ -30,7 +29,7 @@ export const createPosts = async (req, res) => {
     const result = await pool.query(query, values);
     const newPost = result.rows[0];
     console.log(newPost);
-    (await io).to(`category-${category}`).emit("post:new", newPost);
+    req.io.to(`category-${category}`).emit("post:new", newPost);
     return sendResponse(res, {
       message: "post created successfully",
       data: { newPost },

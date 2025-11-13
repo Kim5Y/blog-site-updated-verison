@@ -1,17 +1,15 @@
 import { Server } from "socket.io";
 import pool from "./db.config.js";
-// import verifyUser from "../utils/verifyUser.utils.js";
-import ApiError from "../utils/error.utils.js";
 import env from "./env.js";
 import jwt from "jsonwebtoken";
 let io = null;
 
-export const initSocket = async (server, res) => {
+export const initSocket = (server, res) => {
   try {
     io = new Server(server, {
       cors: {
         origin: "*",
-        methods: ["GET", "POST"],
+        methods: ["GET", "POST", "PATCH"],
       },
     });
     io.on("connection", async (socket) => {
@@ -26,12 +24,12 @@ export const initSocket = async (server, res) => {
       try {
         isValidUser = jwt.verify(token, env.ACCESS_TOKEN_SECRET);
       } catch (err) {
-        socket.disconnect();
-        return new ApiError(
-          res,
-          { message: err.message, statuscode: 401, errors: err },
-          err
-        );
+       if(err.name === "TokenExpiredError"){
+        socket.emit("tokenExpired", {message: err.message})
+       }else {
+        socket.emit("unauthorized", {message: err.message})
+       };
+      return socket.disconnect();
       }
 
       console.log(isValidUser);
@@ -53,10 +51,6 @@ export const initSocket = async (server, res) => {
     return io;
   } catch (err) {
     console.log(err);
-    return new ApiError(
-      res,
-      { statuscode: 401, message: err.message, errors: err },
-      err
-    );
+    return io;
   }
 };

@@ -2,7 +2,7 @@ import ApiError from "../utils/error.utils.js";
 import sendResponse from "../utils/sendResponse.util.js";
 import { getPaginatedPosts, getPostCount } from "../model/getPost.model.js";
 import { client } from "../config/redis.config.js";
-import { getIO } from "../index.js";
+// import { getIO } from "../index.js";
 import pool from "../config/db.config.js";
 
 export default async (req, res) => {
