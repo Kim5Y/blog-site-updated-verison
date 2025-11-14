@@ -69,14 +69,13 @@
       const socket = io("http://localhost:8080", {
         auth: {
           token:
-            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTAsInVzZXJuYW1lIjoia2ltIiwiaWF0IjoxNzYzMDM1Mzk4LCJleHAiOjE3NjMxMjE3OTh9.URsenOwn0uXejiSvmflfobU-oKc2ndCh0lDB8PJa4u8",
+            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTAsInVzZXJuYW1lIjoia2ltIiwiaWF0IjoxNzYzMTMxMTQwLCJleHAiOjE3NjMyMTc1NDB9.fPi2XdjDGvgWc0530WPQnOAuoMayPXxIB6AonPPtMzg",
         },
       });
       // Listen for new posts
       socket.on("post:new", (post) => {
         addPostToDOM(post);
       });
-
       // Handle form submission
       document
         .getElementById("postForm")
@@ -90,14 +89,24 @@
           };
 
           try {
-            const response = await fetch("/api/posts", {
+            const response = await fetch("http://localhost:8080/api/posts/", {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
+                Authorization:
+                  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTAsInVzZXJuYW1lIjoia2ltIiwiaWF0IjoxNzYzMTMxMTQwLCJleHAiOjE3NjMyMTc1NDB9.fPi2XdjDGvgWc0530WPQnOAuoMayPXxIB6AonPPtMzg",
               },
               body: JSON.stringify(formData),
             });
+            const data = await response.json();
+            socket.on("post:new", (data) => {
+              console.log(data);
+            });
+            socket.on("tokenExpired", (error) => console.log(error));
+            socket.on("unauthorized", (error) => console.log(error));
 
+            socket.on("category-tech", (data) => console.log(data));
+            console.log(data);
             if (response.ok) {
               document.getElementById("postForm").reset();
               alert("Post created successfully!");

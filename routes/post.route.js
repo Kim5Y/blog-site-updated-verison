@@ -8,11 +8,11 @@ import getPostsController, {
 import edithPostController from "../controllers/edithPost.controller.js";
 import deletePostController from "../controllers/deletePost.controller.js";
 import postReactionsController from "../controllers/postReactions.controller.js";
-const postRouter = express.Router();
+export const postRouter = express.Router();
 postRouter.post("/", validatePost, verifyUser, createPosts);
 postRouter.get("/", verifyUser, getPostsController);
 postRouter.get("/:slug", verifyUser, getPostBySlug);
 postRouter.delete("/:id", verifyUser, deletePostController);
-postRouter.patch('/:id', verifyUser, edithPostController);
-postRouter.post('/reactions/:id', verifyUser, postReactionsController);
+postRouter.patch("/:id", verifyUser, edithPostController);
+postRouter.post("/reaction/:id", verifyUser, postReactionsController);
 export default postRouter;

@@ -9,7 +9,6 @@ export const getPaginatedPosts = async (limit, offset) => {
   const { rows } = await pool.query(query, [limit, offset]);
   return rows;
 };
-
 export const getPostCount = async () => {
   const query = `SELECT COUNT(*) FROM posts`;
   const { rows } = await pool.query(query);

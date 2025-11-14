@@ -1,9 +1,9 @@
 import express from "express";
 import authenticationRouter from "./authentication.route.js";
-// import AccountsRouter from "./accounts.route.js";
+import commentsRouter from "./comments.route.js";
 import postRouter from "./post.route.js";
 const router = express.Router();
-// router.use('/accounts', AccountsRouter);
 router.use("/auth", authenticationRouter);
-router.use("/posts", postRouter);
+router.use("/post", postRouter);
+router.use("/comment", commentsRouter);
 export default router;

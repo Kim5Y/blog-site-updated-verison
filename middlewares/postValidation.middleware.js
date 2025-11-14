@@ -29,3 +29,26 @@ export const validatePost = [
     next();
   },
 ];
+
+export const createCommentValidation = [
+  body("content")
+    .notEmpty().withMessage("content is required")
+    .isString().withMessage("content must be a string")
+    .isLength({ min: 2 }).withMessage("content must be at least 2 characters"),
+
+  body("parentId")
+    .optional({ nullable: true })
+    .isInt().withMessage("parentId must be a number if provided"),
+
+     (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      const formattedError = errors.array().map((err) => ({
+        field: err.path,
+        message: err.msg,
+      }));
+      return res.status(400).json({ errors: formattedError });
+    }
+    next();
+  },
+];

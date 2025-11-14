@@ -7,6 +7,7 @@ const allowedCategories = ["tech", "lifestyle", "health", "travel", "food"];
 
 export const createPosts = async (req, res) => {
   try {
+    console.log("api called");
     const { title, content, category, image } = req.body;
     if (!title || !content || !category)
       return new ApiError(res, {
@@ -31,6 +32,7 @@ export const createPosts = async (req, res) => {
     console.log(newPost);
     req.io.to(`category-${category}`).emit("post:new", newPost);
     return sendResponse(res, {
+      statuscode: 201,
       message: "post created successfully",
       data: { newPost },
     });

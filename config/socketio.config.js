@@ -17,19 +17,21 @@ export const initSocket = (server, res) => {
       console.log(socket.handshake.auth.token);
       const token = socket.handshake.auth.token;
       if (!token) {
+        socket.emit("tokenError", { message: "invalid token" });
+        console.log("no token provided for the sockets")
         socket.disconnect();
-        throw new Error("error from socket io: invalid token");
       }
       let isValidUser;
       try {
         isValidUser = jwt.verify(token, env.ACCESS_TOKEN_SECRET);
       } catch (err) {
-       if(err.name === "TokenExpiredError"){
-        socket.emit("tokenExpired", {message: err.message})
-       }else {
-        socket.emit("unauthorized", {message: err.message})
-       };
-      return socket.disconnect();
+        if (err.name === "TokenExpiredError") {
+          socket.emit("tokenExpired", { message: err.message });
+        } else {
+          socket.emit("unauthorized", { message: err.message });
+        }
+        console.log(err);
+        return socket.disconnect();
       }
 
       console.log(isValidUser);
@@ -42,6 +44,7 @@ export const initSocket = (server, res) => {
 
       userCategories.forEach((category) => {
         socket.join(`category-${category}`);
+
         console.log(`user {${isValidUser.username}} has joined:`, category);
       });
       socket.on("disconnect", () => {
