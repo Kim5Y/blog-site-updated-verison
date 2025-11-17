@@ -111,7 +111,7 @@ export const commentReation = async (req, res) => {
     );
     let result;
     if (userReaction.length == 0) {
-       result = await pool.query(
+      result = await pool.query(
         `INSERT INTO comment_reactions (user_id, comment_id, reaction_type, created_at)
          VALUES ($1, $2, $3, NOW())
          RETURNING *`,
@@ -148,6 +148,46 @@ export const commentReation = async (req, res) => {
       },
     });
   } catch (err) {
+    return new ApiError(res, { message: err.message, errors: err }, err);
+  }
+};
+
+//edith comment
+export const edithComment = async (req, res) => {
+  try {
+    const commentId = parseInt(req.params.id);
+    const { content } = req.body;
+    if (isNaN(commentId))
+      return new ApiError(res, {
+        message: "invalid comment id",
+        statuscode: 400,
+      });
+    if (!content)
+      return new ApiError(res, { message: "invalid content", statuscode: 400 });
+    const { rows: userComment } = await pool.query(
+      `SELECT * FROM comments WHERE id=$1`,
+      [commentId]
+    );
+    if (userComment.length === 0)
+      return new ApiError(res, {
+        message: "invalid comment id",
+        statuscode: 400,
+      });
+    if (userComment[0].user_id !== req.user.id)
+      return new ApiError(res, { message: "unauthorized", statuscode: 403 });
+    const { rows: updatedComment } = await pool.query(
+      `UPDATE comments
+       SET  content = $1, updated_at = NOW()
+       WHERE id = $2
+       RETURNING *`,
+      [content, userComment[0].id]
+    );
+    return sendResponse(res, {
+      message: "comment updated successfully",
+      data: updatedComment,
+    });
+  } catch (err) {
+    console.log(err);
     return new ApiError(res, { message: err.message, errors: err }, err);
   }
 };

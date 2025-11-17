@@ -13,6 +13,6 @@ postRouter.post("/", validatePost, verifyUser, createPosts);
 postRouter.get("/", verifyUser, getPostsController);
 postRouter.get("/:slug", verifyUser, getPostBySlug);
 postRouter.delete("/:id", verifyUser, deletePostController);
-postRouter.patch("/:id", verifyUser, edithPostController);
+postRouter.patch("/:id", validatePost, verifyUser, edithPostController);
 postRouter.post("/reaction/:id", verifyUser, postReactionsController);
 export default postRouter;
