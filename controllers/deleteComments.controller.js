@@ -1,6 +1,8 @@
 import ApiError from "../utils/error.utils.js";
 import sendResponse from "../utils/sendResponse.util.js";
 import pool from "../config/db.config.js";
+import { client } from "../config/redis.config.js";
+//create comment route
 export default async (req, res) => {
   try {
     const postId = parseInt(req.params.id);
@@ -29,5 +31,123 @@ export default async (req, res) => {
   } catch (err) {
     console.log(err);
     return new ApiError(res, { message: err.message }, err);
+  }
+};
+//getting all post route
+export const getPostComments = async (req, res) => {
+  try {
+    const postId = parseInt(req.params.id);
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const offset = (page - 1) * limit;
+    const cacheKey = `comments:page:${page}:limit:${limit}`;
+    const cacheCommentData = await client.get(cacheKey);
+    if (cacheCommentData) {
+      console.log("fetching from cache");
+      const comments = JSON.parse(cacheCommentData);
+      return sendResponse(res, comments);
+    }
+    if (isNaN(postId))
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid post id" });
+    const { rows: allComments } = await pool.query(
+      `SELECT * FROM comments WHERE post_id = $1 ORDER BY created_at ASC`,
+      [postId]
+    );
+
+    if (allComments.length === 0)
+      return res
+        .status(404)
+        .json({ success: false, message: "No comments found" });
+    const topLevelComments = allComments.filter((c) => c.parent_id === null);
+    const paginatedTopLevel = topLevelComments.slice(offset, offset + limit);
+    const commentMap = {};
+    allComments.forEach((c) => (commentMap[c.id] = { ...c, replies: [] }));
+    allComments.forEach((c) => {
+      if (c.parent_id !== null) {
+        const parent = commentMap[c.parent_id];
+        if (parent) parent.replies.push(commentMap[c.id]);
+      }
+    });
+    const result = paginatedTopLevel.map((c) => commentMap[c.id]);
+
+    const response = {
+      success: true,
+      data: result,
+      meta: {
+        totalComments: topLevelComments.length,
+        page,
+        limit,
+      },
+    };
+    await client.setEx(cacheKey, 60, JSON.stringify(response));
+    return sendResponse(res, response);
+  } catch (err) {
+    console.error(err);
+    return new ApiError(res, { message: err.message, errors: err }, err);
+  }
+};
+//comment reaction
+export const commentReation = async (req, res) => {
+  try {
+    const commentId = parseInt(req.params.id);
+    const userId = parseInt(req.user.id);
+    if (isNaN(commentId))
+      return new ApiError(res, { message: "invalid comment id" });
+
+    const { rows: comments } = await pool.query(
+      `SELECT * FROM comments WHERE id=$1`,
+      [commentId]
+    );
+    if (comments.length == 0)
+      return new ApiError(res, {
+        message: "comment not found check the comment id",
+        statuscode: 404,
+      });
+    const { rows: userReaction } = await pool.query(
+      `SELECT * FROM comment_reactions WHERE comment_id = $1 AND user_id = $2`,
+      [commentId, userId]
+    );
+    let result;
+    if (userReaction.length == 0) {
+       result = await pool.query(
+        `INSERT INTO comment_reactions (user_id, comment_id, reaction_type, created_at)
+         VALUES ($1, $2, $3, NOW())
+         RETURNING *`,
+        [userId, commentId, "like"]
+      );
+      const totalLikes = await pool.query(
+        `SELECT COUNT(*) AS likes FROM comment_reactions WHERE comment_id = $1 AND reaction_type = 'like'`,
+        [commentId]
+      );
+      const updated = result.rows[0];
+      return sendResponse(res, {
+        message: "Post reaction updated successfully",
+        data: {
+          commentId,
+          reaction: updated,
+          total_likes: Number(totalLikes.rows[0].likes),
+        },
+      });
+    }
+
+    await pool.query(
+      `DELETE FROM comment_reactions WHERE comment_id=$1 AND user_id=$2`,
+      [commentId, userId]
+    );
+    const totalLikes = await pool.query(
+      `SELECT COUNT(*) AS likes FROM comment_reactions WHERE comment_id = $1 AND reaction_type = 'like'`,
+      [commentId]
+    );
+    return sendResponse(res, {
+      message: "Post reaction updated successfully",
+      data: {
+        commentId,
+        total_likes: Number(totalLikes.rows[0].likes),
+      },
+    });
+  } catch (err) {
+    return new ApiError(res, { message: err.message, errors: err }, err);
   }
 };

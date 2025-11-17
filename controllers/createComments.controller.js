@@ -18,9 +18,10 @@ export default async (req, res) => {
       return new ApiError(res, {
         message: "post with the id porvided is not found",
       });
+      // console.log(parentId)
     if (parentId) {
       const findParentComment = await pool.query(
-        `SELECT * FROM comments WHERE parent_id = $1`,
+        `SELECT * FROM comments WHERE id = $1`,
         [parentId]
       );
       if (findParentComment.rowCount === 0)
@@ -37,6 +38,7 @@ export default async (req, res) => {
       const countComments = await pool.query(
         `SELECT COUNT(*) FROM comments WHERE parent_id IS NULL`
       );
+      // req.io.to(`category-${postQuery.rows[0].category}`).emit()
       return sendResponse(res, {
         statusCodes: 201,
         data: {
@@ -47,7 +49,7 @@ export default async (req, res) => {
         },
       });
     }
-    console.log({ postId, content, parentId, userId });
+    // console.log({ postId, content, parentId, userId });
     await pool.query(
       `
       INSERT INTO comments (post_id, content, user_id)
