@@ -52,3 +52,26 @@ export default async (req, res) => {
     return new ApiError(res, { message: err.message, errors: err }, err);
   }
 };
+
+export const logout = async (req, res) => {
+  try {
+    const cookiesRefreshToken = req.cookies.refresh_token;
+    if (cookiesRefreshToken)
+      res.clearCookie("refresh_token", {
+        httpOnly: true,
+        secure: true,
+        sameSite: "strict",
+      });
+
+    await pool.query(
+      `UPDATE users
+   SET refresh_token = ARRAY[]::text[]
+   WHERE id = $1`,
+      [req.user.id]
+    );
+
+    return sendResponse(res, { message: "logged out successfully" });
+  } catch (err) {
+    return new ApiError(err, { message: err.message, errors: err }, err);
+  }
+};
