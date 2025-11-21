@@ -16,7 +16,6 @@ export default async (req, res, next) => {
         statuscode: 401,
         message: "invalid authentication header",
       });
-
     const token = authHeader.startsWith("Bearer ")
       ? authHeader.split(" ")[1]
       : authHeader;
@@ -26,7 +25,6 @@ export default async (req, res, next) => {
 
     try {
       const isValidUser = jwt.verify(token, SECRET_ACCESS_KEY);
-
       if (!isValidUser)
         return new ApiError(res, { statuscode: 401, message: "invalid token" });
 

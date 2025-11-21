@@ -19,3 +19,7 @@ commentsRouter.get("/:id", verifyUser, getPostComments);
 commentsRouter.post("/reaction/:id", verifyUser, commentReation);
 commentsRouter.patch("/:id", createCommentValidation, verifyUser, edithComment);
 export default commentsRouter;
+
+//add image upload to the post and user profile image
+// ALTER TABLE users
+// ADD COLUMN image_url TEXT DEFAULT 'https://res.cloudinary.com/dmmqpd9oo/image/upload/c_fill,w_1200,h_1200,ar_1:1/v1763546712/0684456b-aa2b-4631-86f7-93ceaf33303c_uh0gkq.jpg';

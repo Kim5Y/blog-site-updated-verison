@@ -1,5 +1,5 @@
 import { body, validationResult } from "express-validator";
-
+import sanitizeHtml from "sanitize-html"
 export const createAccountValidation = [
   body("username")
     .trim()
@@ -90,6 +90,42 @@ export const loginValidator = [
     .withMessage("Password must contain at least one number")
     .matches(/[@$!%*?&]/)
     .withMessage("Password must contain at least one special character"),
+  (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+    next();
+  },
+];
+
+export const validateEditProfile = [
+  body("username")
+    .optional()
+    .isAlphanumeric()
+    .withMessage("Username must contain only letters and numbers")
+    .isLength({ max: 30 })
+    .withMessage("Username cannot exceed 30 characters")
+    .trim()
+    .escape(),
+
+  body("bio")
+    .optional()
+    .isLength({ max: 1000 })
+    .withMessage("Bio cannot exceed 1000 characters")
+    .trim()
+    .customSanitizer((value) => {
+      return sanitizeHtml(value, {
+        allowedTags: ["b", "i", "u", "a"],
+        allowedAttributes: { a: ["href", "target"] },
+      });
+    }),
+
+  body("age")
+    .optional()
+    .isInt({ min: 1, max: 90 })
+    .withMessage("Age must be a number between 1 and 90")
+    .toInt(),
   (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {

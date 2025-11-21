@@ -1,4 +1,5 @@
 import express from "express";
+import multer from "multer";
 import verifyUser from "../utils/verifyUser.utils.js";
 import { validatePost } from "../middlewares/postValidation.middleware.js";
 import { createPosts } from "../controllers/createPost.controller.js";
@@ -8,8 +9,9 @@ import getPostsController, {
 import edithPostController from "../controllers/edithPost.controller.js";
 import deletePostController from "../controllers/deletePost.controller.js";
 import postReactionsController from "../controllers/postReactions.controller.js";
-export const postRouter = express.Router();
+const postRouter = express.Router();
 postRouter.post("/", validatePost, verifyUser, createPosts);
+// postRouter.post("/upload", verifyUser, imageUpload);
 postRouter.get("/", verifyUser, getPostsController);
 postRouter.get("/:slug", verifyUser, getPostBySlug);
 postRouter.delete("/:id", verifyUser, deletePostController);

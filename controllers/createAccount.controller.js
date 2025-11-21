@@ -26,7 +26,6 @@ export const sendOtp = async (req, res) => {
         message: "input field cannot be empty",
       });
     }
-    console.log(categories);
     const allValidCategories = categories.every((category) =>
       allowedCategories.includes(category)
     );
