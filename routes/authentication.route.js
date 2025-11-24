@@ -12,14 +12,33 @@ import verifyUser from "../utils/verifyUser.utils.js";
 import userProfileController, {
   logout,
 } from "../controllers/userProfile.controller.js";
-import edithPostController from "../controllers/edithPost.controller.js";
 import edithProfileController from "../controllers/edithProfile.controller.js";
+import changePasswordController, {
+  sendResetEmailOtp,
+  resetPassword,
+  verifyPasswordOtp,
+  verifyEmailResetOtp,
+} from "../controllers/changePassword.controller.js";
 const authenticationRouter = express.Router();
 authenticationRouter.post("/refresh", refreshTokenController);
 authenticationRouter.post("/send-otp", createAccountValidation, sendOtp);
 authenticationRouter.post("/verify-otp", verifyOtpValidator, verifyOtp);
 authenticationRouter.post("/login", loginValidator, login);
 authenticationRouter.get("/profile/:id", verifyUser, userProfileController);
-authenticationRouter.patch("/profile", validateEditProfile,verifyUser, edithProfileController);
+authenticationRouter.patch(
+  "/profile",
+  validateEditProfile,
+  verifyUser,
+  edithProfileController
+);
 authenticationRouter.post("/logout", verifyUser, logout);
+authenticationRouter.post("/password-reset/otp", changePasswordController);
+authenticationRouter.post("/password-reset/verify", verifyPasswordOtp);
+authenticationRouter.put("/password-reset/complete", resetPassword);
+authenticationRouter.post(
+  "/email-reset/otp",
+  verifyUser,
+  sendResetEmailOtp
+);
+authenticationRouter.put("/email-reset/complete", verifyUser, verifyEmailResetOtp);
 export default authenticationRouter;

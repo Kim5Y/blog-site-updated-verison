@@ -53,7 +53,8 @@ export const sendOtp = async (req, res) => {
     );
     if (emailExists.rowCount > 0)
       return new ApiError(res, {
-        message: "invalid email address please use another email address",
+        message:
+          "Your search did not return any results. Please try again with other information.",
         statuscode: 400,
       });
     // const emailResponse = await validateEmail(email);
@@ -65,7 +66,11 @@ export const sendOtp = async (req, res) => {
     //     message: "invalid email, try another email address",
     //   });
     const otpData = await sendCode(email);
-    console.log(otpData);
+    if (!otpData)
+      return new ApiError(res, {
+        message: "failed to send code",
+        statuscode: 500,
+      });
     const newUser = {
       username,
       password,
@@ -82,7 +87,7 @@ export const sendOtp = async (req, res) => {
       });
     return sendResponse(res, {
       message: `OTP code successfully sent to ${email}, expires in 6minutes`,
-      statusCodes: 201,
+      statusCodes: 200,
     });
   } catch (err) {
     console.log(err);
@@ -116,9 +121,9 @@ export const verifyOtp = async (req, res) => {
     if (otpCodeHasExpired)
       return new ApiError(res, {
         message: "OTP code has expired",
-        statuscode: 401,
+        statuscode: 400,
       });
-    if (otpCode !== userData.otpData.code)
+    if (!(await bcrypt.compare(otpCode, userData.hashedCode)))
       return new ApiError(res, {
         statuscode: 400,
         message: "invalid OTP code",
