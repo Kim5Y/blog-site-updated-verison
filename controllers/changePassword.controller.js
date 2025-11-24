@@ -230,14 +230,6 @@ export const sendResetEmailOtp = async (req, res) => {
       "SELECT email FROM users WHERE email=$1",
       [email]
     );
-    // const recentEmail = emailExists.rows[0].email;
-    // console.log(recentEmail);
-    // if (emailExists.rowCount === 0)
-    //   return new ApiError(res, {
-    //     message:
-    //       "Your search did not return any results. Please try again with other information.",
-    //     statuscode: 400,
-    //   });
     if (emailExists.rowCount !== 0)
       return new ApiError(res, {
         message: "new email can not be thesame as the recent email",

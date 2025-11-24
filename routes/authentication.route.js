@@ -1,6 +1,12 @@
 import express from "express";
 import refreshTokenController from "../controllers/refreshToken.controller.js";
 import {
+  strictLimiter,
+  mediumLimiter,
+  flexibleLimiter,
+} from "../config/rateLimit.config.js";
+
+import {
   createAccountValidation,
   verifyOtpValidator,
   loginValidator,
@@ -19,26 +25,61 @@ import changePasswordController, {
   verifyPasswordOtp,
   verifyEmailResetOtp,
 } from "../controllers/changePassword.controller.js";
+
 const authenticationRouter = express.Router();
-authenticationRouter.post("/refresh", refreshTokenController);
-authenticationRouter.post("/send-otp", createAccountValidation, sendOtp);
-authenticationRouter.post("/verify-otp", verifyOtpValidator, verifyOtp);
-authenticationRouter.post("/login", loginValidator, login);
-authenticationRouter.get("/profile/:id", verifyUser, userProfileController);
+authenticationRouter.post("/refresh", flexibleLimiter, refreshTokenController);
+authenticationRouter.post(
+  "/create-account/otp",
+  strictLimiter,
+  createAccountValidation,
+  sendOtp
+);
+authenticationRouter.post(
+  "/create-account/verify",
+  strictLimiter,
+  verifyOtpValidator,
+  verifyOtp
+);
+authenticationRouter.post("/login", strictLimiter, login);
+authenticationRouter.get(
+  "/profile/:id",
+  flexibleLimiter,
+  verifyUser,
+  userProfileController
+);
 authenticationRouter.patch(
   "/profile",
+  flexibleLimiter,
   validateEditProfile,
   verifyUser,
   edithProfileController
 );
-authenticationRouter.post("/logout", verifyUser, logout);
-authenticationRouter.post("/password-reset/otp", changePasswordController);
-authenticationRouter.post("/password-reset/verify", verifyPasswordOtp);
-authenticationRouter.put("/password-reset/complete", resetPassword);
+authenticationRouter.post("/logout", flexibleLimiter, verifyUser, logout);
+authenticationRouter.post(
+  "/password-reset/otp",
+  strictLimiter,
+  changePasswordController
+);
+authenticationRouter.post(
+  "/password-reset/verify",
+  strictLimiter,
+  verifyPasswordOtp
+);
+authenticationRouter.put(
+  "/password-reset/complete",
+  strictLimiter,
+  resetPassword
+);
 authenticationRouter.post(
   "/email-reset/otp",
+  strictLimiter,
   verifyUser,
   sendResetEmailOtp
 );
-authenticationRouter.put("/email-reset/complete", verifyUser, verifyEmailResetOtp);
+authenticationRouter.put(
+  "/email-reset/complete",
+  strictLimiter,
+  verifyUser,
+  verifyEmailResetOtp
+);
 export default authenticationRouter;

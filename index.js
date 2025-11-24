@@ -1,6 +1,7 @@
 import express from "express";
 import http from "http";
 import cookieParser from "cookie-parser";
+// import RedisStore from "rate-limit-redis";
 import cors from "cors";
 import { client } from "./config/redis.config.js";
 import ApiError from "./utils/error.utils.js";
@@ -17,18 +18,13 @@ try {
 const PORT = env.PORT;
 const app = express();
 const server = http.createServer(app);
-// const io = new Server(server, {
-//   cors: {
-//     origin: "*",
-//     methods: ["GET", "POST"],
-//   },
-// });
-    const IO = initSocket(server);
+
+const IO = initSocket(server);
 
 app.use((req, res, next) => {
   try {
     if (!IO) throw new Error("Socket.io not initialized!");
-   req.io = IO;
+    req.io = IO;
   } catch (err) {
     return new ApiError(res, { errors: err.message }, err);
   }
