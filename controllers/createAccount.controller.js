@@ -29,7 +29,6 @@ export const sendOtp = async (req, res) => {
     const allValidCategories = categories.every((category) =>
       allowedCategories.includes(category)
     );
-
     if (!allValidCategories) {
       return new ApiError(res, {
         statuscode: 400,
@@ -37,7 +36,6 @@ export const sendOtp = async (req, res) => {
       });
     }
     console.log("all categories are valid");
-    if (await client.get(email)) await client.del(email);
     const usernameExists = await pool.query(
       "SELECT * FROM users WHERE user_name = $1 ",
       [username]

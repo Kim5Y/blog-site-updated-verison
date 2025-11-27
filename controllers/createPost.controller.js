@@ -6,7 +6,7 @@ const allowedCategories = ["tech", "lifestyle", "health", "travel", "food"];
 
 export const createPosts = async (req, res) => {
   try {
-    const { title, content, category, image } = req.body;
+    const { title, content, category, image_url } = req.body;
     if (!title || !content || !category)
       return new ApiError(res, {
         statuscode: 400,
@@ -19,13 +19,24 @@ export const createPosts = async (req, res) => {
         message: "invalid category",
       });
     const slug = `${baseSlug}-${req.user.id}-${Date.now()}`;
-    const query = `
+    let result;
+    if (image_url) {
+      const query = `
+      INSERT INTO posts (user_id, title, content, category, slug, image_url)
+      VALUES ($1, $2, $3, $4, $5, $6)
+      RETURNING *;
+    `;
+      const values = [req.user.id, title, content, category, slug, image_url];
+      result = await pool.query(query, values);
+    } else {
+      const query = `
       INSERT INTO posts (user_id, title, content, category, slug)
       VALUES ($1, $2, $3, $4, $5)
       RETURNING *;
     `;
-    const values = [req.user.id, title, content, category, slug];
-    const result = await pool.query(query, values);
+      const values = [req.user.id, title, content, category, slug];
+      result = await pool.query(query, values);
+    }
     const newPost = result.rows[0];
     console.log(newPost);
     req.io.to(`category-${category}`).emit("post:new", newPost);

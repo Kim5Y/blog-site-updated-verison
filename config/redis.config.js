@@ -8,3 +8,7 @@ export const client = createClient({
     port: env.REDIS_PORT,
   },
 });
+client
+  .connect()
+  .then(() => console.log("redis connected successfully"))
+  .catch((error) => console.log(error));

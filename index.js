@@ -1,26 +1,17 @@
 import express from "express";
 import http from "http";
 import cookieParser from "cookie-parser";
-// import RedisStore from "rate-limit-redis";
 import cors from "cors";
-import { client } from "./config/redis.config.js";
 import ApiError from "./utils/error.utils.js";
 import router from "./routes/router.js";
 import env from "./config/env.js";
 import pool from "./config/db.config.js";
 import { initSocket } from "./config/socketio.config.js";
-try {
-  if (await client.connect()) console.log("redis connected  successfully");
-  if (await pool.connect()) console.log("Database connected successfully");
-} catch (error) {
-  console.log(error);
-}
+pool.connect().then(()=> console.log("database connected successfully")).catch((error)=> console.log(error));
 const PORT = env.PORT;
 const app = express();
 const server = http.createServer(app);
-
 const IO = initSocket(server);
-
 app.use((req, res, next) => {
   try {
     if (!IO) throw new Error("Socket.io not initialized!");

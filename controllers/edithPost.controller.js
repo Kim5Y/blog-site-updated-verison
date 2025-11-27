@@ -5,7 +5,7 @@ export default async (req, res) => {
   try {
     const postId = parseInt(req.params.id);
     const { title, content } = req.body;
-     if (!/^\d+$/.test(postId))
+    if (!/^\d+$/.test(postId))
       return new ApiError(res, {
         message: "post id must be a number",
         statuscode: 400,
@@ -28,10 +28,14 @@ export default async (req, res) => {
       [title, content, post.id]
     );
     const updatedPost = updatePostQuery.rows[0];
-    const sendToConnectedUsers = req.io.to(`category-${updatedPost.category}`)
+    const sendToConnectedUsers = req.io
+      .to(`post:${postId}`)
       .emit("post:updated", updatedPost);
     if (sendToConnectedUsers)
-      return sendResponse(res, { message: "post updated sucessfully" , data: updatedPost});
+      return sendResponse(res, {
+        message: "post updated sucessfully",
+        data: updatedPost,
+      });
   } catch (err) {
     console.log(err);
     return new ApiError(res, { message: err.message, errors: err }, err);

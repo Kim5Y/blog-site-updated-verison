@@ -21,9 +21,7 @@ export default async (req, res) => {
     const deltedPost = await pool.query(`DELETE FROM posts WHERE id = $1`, [
       POST.id,
     ]);
-    if (deltedPost) {
-      req.io.to(`category-${category}`).emit("post:deleted", POST);
-    }
+      req.io.to(`post:${postId}`).emit("post:deleted", POST);
     return sendResponse(res, { message: "post deleted successfully" });
   } catch (err) {
     console.log(err);

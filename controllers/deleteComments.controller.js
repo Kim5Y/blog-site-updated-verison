@@ -27,7 +27,13 @@ export default async (req, res) => {
       `DELETE FROM comments WHERE id=$1 AND post_id=$2 AND user_id=$3 `,
       [comment.id, comment.post_id, comment.user_id]
     );
-    return res.sendStatus(200);
+    if (checkComments.rows[0].parent_id !== null) {
+      req.io.to(`post:${postId}-${checkComments.rows[0].parent_id}`).emit("comment:delete", deleteComment.rows[0]);
+    }
+    req.io
+      .to(`comment:${postId}`)
+      .emit("comment:delete", deleteComment.rows[0]);
+    return res.sendResponse(res, { message: "commend deleted successfullu" });
   } catch (err) {
     console.log(err);
     return new ApiError(res, { message: err.message }, err);
@@ -155,8 +161,8 @@ export const commentReation = async (req, res) => {
 //edith comment
 export const edithComment = async (req, res) => {
   try {
-    const commentId = parseInt(req.params.id);
-    const { content } = req.body;
+    const postId = parseInt(req.params.id);
+    const { content, commentId } = req.body;
     if (isNaN(commentId))
       return new ApiError(res, {
         message: "invalid comment id",
@@ -165,8 +171,8 @@ export const edithComment = async (req, res) => {
     if (!content)
       return new ApiError(res, { message: "invalid content", statuscode: 400 });
     const { rows: userComment } = await pool.query(
-      `SELECT * FROM comments WHERE id=$1`,
-      [commentId]
+      `SELECT * FROM comments WHERE id=$1 AND post_id=$2`,
+      [commentId, postId]
     );
     if (userComment.length === 0)
       return new ApiError(res, {
@@ -178,13 +184,21 @@ export const edithComment = async (req, res) => {
     const { rows: updatedComment } = await pool.query(
       `UPDATE comments
        SET  content = $1, updated_at = NOW()
-       WHERE id = $2
+       WHERE id = $3 AND post_id=$2
        RETURNING *`,
-      [content, userComment[0].id]
+      [content, postId, userComment[0].id]
     );
+    if (userComment.rows[0].parent_id !== null) {
+      req.io.to(`comment:${postId}-${userComment[0].parent_id}`);
+      return sendResponse(res, {
+        message: "comment updated successfully",
+        data: updatedComment[0],
+      });
+    }
+    req.io.to(`post:${postId}`).emit("comment:edith", updatedComment[0]);
     return sendResponse(res, {
       message: "comment updated successfully",
-      data: updatedComment,
+      data: updatedComment[0],
     });
   } catch (err) {
     console.log(err);

@@ -32,7 +32,7 @@ export default async (req, res) => {
         [postId]
       );
       const updated = result.rows[0];
-      req.io.to(`category-${post.category}`).emit("post:reactionUpdated", {
+      req.io.to(`post:${postId}`).emit("post:reactionLike", {
         postId,
         total_likes: Number(totalLikes.rows[0].likes),
       });
@@ -53,11 +53,10 @@ export default async (req, res) => {
       `SELECT COUNT(*) AS likes FROM post_reactions WHERE post_id = $1 AND reaction_type = 'like'`,
       [postId]
     );
-    await req.io.to(`category-${post.category}`).emit("post:reactionUpdated", {
+    await req.io.to(`post:${postId}`).emit("post:reactionDislike", {
       postId,
       total_likes: Number(totalLikes.rows[0].likes),
     });
-    
     return sendResponse(res, {
       message: "Post reaction updated successfully",
       data: {

@@ -10,15 +10,13 @@ export default async (req, res) => {
     if (isNaN(postId)) return new ApiError(res, { message: "invalid post id" });
     if (!content)
       return new ApiError(res, { message: "comment content cannot be empty" });
-
-    const postQuery = await pool.query(`SELECT FROM posts WHERE id=$1`, [
+    const postQuery = await pool.query(`SELECT id FROM posts WHERE id=$1`, [
       postId,
     ]);
     if (postQuery.rowCount === 0)
       return new ApiError(res, {
         message: "post with the id porvided is not found",
       });
-      // console.log(parentId)
     if (parentId) {
       const findParentComment = await pool.query(
         `SELECT * FROM comments WHERE id = $1`,
@@ -26,8 +24,7 @@ export default async (req, res) => {
       );
       if (findParentComment.rowCount === 0)
         return new ApiError(res, { message: "parent comment not found" });
-
-      await pool.query(
+      const commentQuery = await pool.query(
         `
       INSERT INTO comments (post_id, content, parent_id, user_id)
       VALUES ($1, $2, $3, $4)
@@ -35,22 +32,23 @@ export default async (req, res) => {
     `,
         [postId, content, parentId, userId]
       );
+      const newComment = commentQuery.rows[0];
+      console.log("reqly comment", newComment);
       const countComments = await pool.query(
         `SELECT COUNT(*) FROM comments WHERE parent_id IS NULL`
       );
-      // req.io.to(`category-${postQuery.rows[0].category}`).emit()
+      req.io
+        .to(`comment:${postQuery.rows[0].id}-${parentId}`)
+        .emit("comment:new", newComment);
       return sendResponse(res, {
         statusCodes: 201,
         data: {
-          parentId,
-          content,
-          postId,
+          newComment,
           totalComments: countComments.rows[0].count,
         },
       });
     }
-    // console.log({ postId, content, parentId, userId });
-    await pool.query(
+    const commentQuery = await pool.query(
       `
       INSERT INTO comments (post_id, content, user_id)
       VALUES ($1, $2, $3)
@@ -61,12 +59,12 @@ export default async (req, res) => {
     const countComments = await pool.query(
       `SELECT COUNT(*) FROM comments WHERE parent_id IS NULL`
     );
+    const newComment = commentQuery.rows[0];
+    req.io.to(`post:${postQuery.rows[0].id}`).emit("comment:new", newComment);
     return sendResponse(res, {
       statusCodes: 201,
       data: {
-        parentId,
-        content,
-        postId,
+        newComment,
         totalComments: countComments.rows[0].count,
       },
     });

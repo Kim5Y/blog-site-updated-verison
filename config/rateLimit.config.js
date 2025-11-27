@@ -1,12 +1,14 @@
 import rateLimit from "express-rate-limit";
+import RedisStore from "rate-limit-redis";
+import { client } from "./redis.config.js";
 export const strictLimiter = rateLimit({
   windowMs: 5 * 60 * 1000,
   max: 7,
   standardHeaders: true,
   legacyHeaders: false,
-//   store: new RedisStore({
-//     sendCommand: (...args) => client.sendCommand(args),
-//   }),
+  store: new RedisStore({
+    sendCommand: (...args) => client.sendCommand(args),
+  }),
 });
 
 export const mediumLimiter = rateLimit({
@@ -14,9 +16,9 @@ export const mediumLimiter = rateLimit({
   max: 100,
   standardHeaders: true,
   legacyHeaders: false,
-//   store: new RedisStore({
-//     sendCommand: (...args) => client.sendCommand(args),
-//   }),
+    store: new RedisStore({
+      sendCommand: (...args) => client.sendCommand(args),
+    }),
 });
 
 export const flexibleLimiter = rateLimit({
@@ -24,7 +26,7 @@ export const flexibleLimiter = rateLimit({
   max: 400,
   standardHeaders: true,
   legacyHeaders: false,
-//   store: new RedisStore({
-//     sendCommand: (...args) => client.sendCommand(args),
-//   }),
+    store: new RedisStore({
+      sendCommand: (...args) => client.sendCommand(args),
+    }),
 });
