@@ -12,8 +12,8 @@ import { mediumLimiter, strictLimiter } from "../config/rateLimit.config.js";
 export const postRouter = express.Router();
 postRouter.post("/", mediumLimiter, validatePost, verifyUser, createPosts);
 postRouter.get("/", mediumLimiter, verifyUser, getPostsController);
-postRouter.get("/:slug", strictLimiter, verifyUser,getPostBySlug);
-postRouter.delete("/:id", mediumLimiter,verifyUser, deletePostController);
+postRouter.get("/:slug", strictLimiter, verifyUser, getPostBySlug);
+postRouter.delete("/:id", mediumLimiter, verifyUser, deletePostController);
 postRouter.patch(
   "/:id",
   mediumLimiter,
@@ -28,4 +28,3 @@ postRouter.post(
   postReactionsController
 );
 export default postRouter;
-//check the get post by slug cuz i removed the verify user middlew

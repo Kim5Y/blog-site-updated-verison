@@ -1,6 +1,7 @@
 import ApiError from "../utils/error.utils.js";
 import pool from "../config/db.config.js";
 import sendResponse from "../utils/sendResponse.util.js";
+import { sendNotification } from "../services/notifications.service.js";
 
 export default async (req, res) => {
   try {
@@ -36,6 +37,15 @@ export default async (req, res) => {
         postId,
         total_likes: Number(totalLikes.rows[0].likes),
       });
+      if (userId != post.user_id) {
+        const notification = await sendNotification(req, {
+          userId: post.user_id,
+          actorId: userId,
+          action: "like",
+          entityType: "post",
+          entityId: postId,
+        });
+      }
       return sendResponse(res, {
         message: "Post reaction updated successfully",
         data: {

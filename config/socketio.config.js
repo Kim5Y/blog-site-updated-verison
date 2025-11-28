@@ -18,7 +18,7 @@ export const initSocket = (server, res) => {
       const token = socket.handshake.auth.token;
       if (!token) {
         socket.emit("tokenError", { message: "invalid token" });
-        console.log("no token provided for the sockets")
+        console.log("no token provided for the sockets");
         socket.disconnect();
       }
       let isValidUser;
@@ -47,6 +47,8 @@ export const initSocket = (server, res) => {
 
         console.log(`user {${isValidUser.username}} has joined:`, category);
       });
+      socket.join(`user:${isValidUser.id}`);
+      console.log(`${isValidUser.username} has joined: user${isValidUser.id}`)
       socket.on("disconnect", () => {
         console.log("Socket disconnected:", socket.id);
       });

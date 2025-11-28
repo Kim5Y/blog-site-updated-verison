@@ -2,6 +2,7 @@ import ApiError from "../utils/error.utils.js";
 import sendResponse from "../utils/sendResponse.util.js";
 import pool from "../config/db.config.js";
 import { client } from "../config/redis.config.js";
+import { sendNotification } from "../services/notifications.service.js";
 //create comment route
 export default async (req, res) => {
   try {
@@ -28,7 +29,9 @@ export default async (req, res) => {
       [comment.id, comment.post_id, comment.user_id]
     );
     if (checkComments.rows[0].parent_id !== null) {
-      req.io.to(`post:${postId}-${checkComments.rows[0].parent_id}`).emit("comment:delete", deleteComment.rows[0]);
+      req.io
+        .to(`post:${postId}-${checkComments.rows[0].parent_id}`)
+        .emit("comment:delete", deleteComment.rows[0]);
     }
     req.io
       .to(`comment:${postId}`)
@@ -127,6 +130,15 @@ export const commentReation = async (req, res) => {
         `SELECT COUNT(*) AS likes FROM comment_reactions WHERE comment_id = $1 AND reaction_type = 'like'`,
         [commentId]
       );
+      if (req.user.id != comments[0].user_id) {
+        sendNotification(req, {
+          userId: comments[0].user_id,
+          actorId: userId,
+          action: "like",
+          entityType: "comment",
+          entityId: commentId,
+        });
+      };
       const updated = result.rows[0];
       return sendResponse(res, {
         message: "Post reaction updated successfully",
@@ -137,7 +149,6 @@ export const commentReation = async (req, res) => {
         },
       });
     }
-
     await pool.query(
       `DELETE FROM comment_reactions WHERE comment_id=$1 AND user_id=$2`,
       [commentId, userId]

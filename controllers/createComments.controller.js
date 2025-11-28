@@ -1,6 +1,7 @@
 import ApiError from "../utils/error.utils.js";
 import pool from "../config/db.config.js";
 import sendResponse from "../utils/sendResponse.util.js";
+import { sendNotification } from "../services/notifications.service.js";
 export default async (req, res) => {
   try {
     const postId = parseInt(req.params.id);
@@ -10,7 +11,7 @@ export default async (req, res) => {
     if (isNaN(postId)) return new ApiError(res, { message: "invalid post id" });
     if (!content)
       return new ApiError(res, { message: "comment content cannot be empty" });
-    const postQuery = await pool.query(`SELECT id FROM posts WHERE id=$1`, [
+    const postQuery = await pool.query(`SELECT * FROM posts WHERE id=$1`, [
       postId,
     ]);
     if (postQuery.rowCount === 0)
@@ -40,6 +41,15 @@ export default async (req, res) => {
       req.io
         .to(`comment:${postQuery.rows[0].id}-${parentId}`)
         .emit("comment:new", newComment);
+      if (userId != findParentComment.rows[0].user_id) {
+        sendNotification(req, {
+          userId: findParentComment.rows[0].user_id,
+          action: "reply",
+          actorId: newComment.user_id,
+          entityId: findParentComment.rows[0].id,
+          entityType: "comment",
+        });
+      }
       return sendResponse(res, {
         statusCodes: 201,
         data: {
@@ -61,6 +71,15 @@ export default async (req, res) => {
     );
     const newComment = commentQuery.rows[0];
     req.io.to(`post:${postQuery.rows[0].id}`).emit("comment:new", newComment);
+    console.log(postQuery.rows[0]);
+    sendNotification(req, {
+      userId: postQuery.rows[0].user_id,
+      action: "new",
+      actorId: newComment.user_id,
+      entityId: postQuery.rows[0].id,
+      entityType: "comment",
+    });
+
     return sendResponse(res, {
       statusCodes: 201,
       data: {

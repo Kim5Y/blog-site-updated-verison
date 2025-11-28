@@ -1,5 +1,6 @@
 import sendResponse from "../utils/sendResponse.util.js";
 import ApiError from "../utils/error.utils.js";
+import { sendNotification } from "../services/notifications.service.js";
 import pool from "../config/db.config.js";
 export default async (req, res) => {
   try {
@@ -21,7 +22,8 @@ export default async (req, res) => {
     const deltedPost = await pool.query(`DELETE FROM posts WHERE id = $1`, [
       POST.id,
     ]);
-      req.io.to(`post:${postId}`).emit("post:deleted", POST);
+    req.io.to(`post:${postId}`).emit("post:deleted", POST);
+    // const sendNotificationToUser = await sendNotification({userId: req.user.id, });
     return sendResponse(res, { message: "post deleted successfully" });
   } catch (err) {
     console.log(err);
