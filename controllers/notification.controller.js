@@ -31,7 +31,7 @@ export const getNotification = async (req, res) => {
         [userId]
       ),
     ]);
-  
+
     const total = count.rows[0].total;
     const totalPages = Math.ceil(total / limit);
     const result = {
@@ -51,5 +51,51 @@ export const getNotification = async (req, res) => {
   } catch (err) {
     console.log(err);
     new ApiError(res, { message: err.message, errors: err }, err);
+  }
+};
+export const markAsRead = async (req, res) => {
+  try {
+    const notificationId = parseInt(req.params.id);
+    const userId = req.user.id;
+    console.log(userId);
+    if (isNaN(notificationId))
+      return new ApiError(res, {
+        message: "invalid notifcation id",
+        statuscode: 400,
+      });
+    if (!notificationId) {
+      const notificaiton = await pool.query(
+        `UPDATE notifications SET is_read=true WHERE is_read=false AND user_id=$1`,
+        [userId]
+      );
+      if (notificaiton.rowCount === 0)
+        return new ApiError(res, {
+          message: "failed to update notifications, check notification id",
+          statuscode: 400,
+        });
+      const updatedNotification = notificaiton.rows[0];
+      return sendResponse(res, {
+        message: "notificaitons updated successfully",
+        data: updatedNotification,
+      });
+    }
+    const notificaiton = await pool.query(
+      `UPDATE notifications SET is_read=true WHERE is_read=false AND user_id=$1 AND id=$2`,
+      [userId, notificationId]
+    );
+    if (notificaiton.rowCount === 0)
+      return new ApiError(res, {
+        message: "failed to update notifications, check notification id",
+        statuscode: 400,
+      });
+    const updatedNotification = notificaiton.rows[0];
+    console.log({ updatedNotification });
+    return sendResponse(res, {
+      message: "notificaitons updated successfully",
+      data: updatedNotification,
+    });
+  } catch (err) {
+    console.log(err);
+    return new ApiError(res, { message: err.message, errors: err }, err);
   }
 };

@@ -1,0 +1,16 @@
+0000000000000000000000000000000000000000 3868f767978c95c9d05b6f8c5e8c1b5f01d70d12 kim <kim@HP-ProBook-640-G1.(none)> 1762535224 +0100	clone: from https://github.com/Kim5Y/blog-site.git
+3868f767978c95c9d05b6f8c5e8c1b5f01d70d12 8b9c9b216a9a0fa2282cdb5d13cdda79849d8140 kim <ibrahimkim16@gmail.com> 1762793391 +0100	commit: finished create post functionality
+8b9c9b216a9a0fa2282cdb5d13cdda79849d8140 6a1ce52d13908e1b195ed5cb76d3396c5fd5c434 kim <ibrahimkim16@gmail.com> 1762951787 +0100	commit: finished post feed route
+6a1ce52d13908e1b195ed5cb76d3396c5fd5c434 a319d952c22f18250e06a625f0f0a9876265d190 kim <ibrahimkim16@gmail.com> 1762968508 +0100	commit: finished post crud
+a319d952c22f18250e06a625f0f0a9876265d190 039a1dfab3a6ab0a548839845947b3749e3a449e kim <ibrahimkim16@gmail.com> 1763055220 +0100	commit: finished post reaction endpoint
+039a1dfab3a6ab0a548839845947b3749e3a449e 573248036040987144c893597db17dacd51617ca kim <ibrahimkim16@gmail.com> 1763141097 +0100	commit: finished post feature and create comment endpoint
+573248036040987144c893597db17dacd51617ca a15d6b75906249644d0ea385cc80af82de720b33 kim <ibrahimkim16@gmail.com> 1763387560 +0100	commit: finished add, get and react to comment endpoint
+a15d6b75906249644d0ea385cc80af82de720b33 844505e494e78af681f178e7f794aef6cfa32114 kim <ibrahimkim16@gmail.com> 1763390241 +0100	commit: finished edith comment route
+844505e494e78af681f178e7f794aef6cfa32114 3011e8c11d5afffd88ef6707a9694a8a00ab8ea3 kim <ibrahimkim16@gmail.com> 1763462562 +0100	commit: updated verify user utils
+3011e8c11d5afffd88ef6707a9694a8a00ab8ea3 6adeb797fcedf20155920700cd88c54d9f57c2c4 kim <ibrahimkim16@gmail.com> 1763462617 +0100	commit: fixed logout functionallity
+6adeb797fcedf20155920700cd88c54d9f57c2c4 80b19b14c7e1b0cda6e203833649b7f3d2d658b6 kim <ibrahimkim16@gmail.com> 1763720522 +0100	commit: added edith profile endpoint
+80b19b14c7e1b0cda6e203833649b7f3d2d658b6 2b63221fa6e56076057b2b60f212451507b0f3d0 kim <ibrahimkim16@gmail.com> 1763982837 +0100	commit: fixed reset email endpoint
+2b63221fa6e56076057b2b60f212451507b0f3d0 5c3ab2ea17b65a9419112c8db7651f4867d4e6ba kim <ibrahimkim16@gmail.com> 1764004213 +0100	commit: added rate limiting
+5c3ab2ea17b65a9419112c8db7651f4867d4e6ba 8765f6c6e531969da1e128b074e278d2f406e406 kim <ibrahimkim16@gmail.com> 1764090531 +0100	commit: added search feature
+8765f6c6e531969da1e128b074e278d2f406e406 bccd84021557268a3895b8f0d91787bd302f59ce kim <ibrahimkim16@gmail.com> 1764249662 +0100	commit: fixed redis issue
+bccd84021557268a3895b8f0d91787bd302f59ce c930c7b928c1ca14f2ef5dbb5914c69bce5b843a kim <ibrahimkim16@gmail.com> 1764350487 +0100	commit: added notification feature

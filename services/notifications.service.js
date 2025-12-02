@@ -83,22 +83,3 @@ export const sendNotification = async (
   }
 };
 
-// function buildNotificationMessage({ action, entity_type }) {
-//   if (action === "comment" && entity_type === "post") {
-//     return "Someone commented on your post";
-//   }
-
-//   if (action === "like" && entity_type === "post") {
-//     return "Someone liked your post";
-//   }
-
-//   if (action === "like" && entity_type === "comment") {
-//     return "Someone liked your comment";
-//   }
-
-//   if (action === "follow" && entity_type === "user") {
-//     return "You have a new follower";
-//   }
-
-//   return "You have a new notification";
-// }

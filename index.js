@@ -1,6 +1,7 @@
 import express from "express";
 import http from "http";
 import cookieParser from "cookie-parser";
+import "./crone/notificationCleaner.js"
 import cors from "cors";
 import ApiError from "./utils/error.utils.js";
 import router from "./routes/router.js";

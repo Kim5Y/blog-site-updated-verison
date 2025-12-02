@@ -33,13 +33,6 @@ class ApiError extends Error {
       }
     };
     console.log(normalizeError());
-    // const response = {
-    //   success: this.success,
-    //   message: this.message,
-    //   data: this.data,
-    //   errors: this.errors,
-    //   stack: stack && this.stack,
-    // };
     return res.status(statuscode).json(normalizeError());
   }
 }
