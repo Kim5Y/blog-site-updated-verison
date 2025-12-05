@@ -10,7 +10,7 @@ import pool from "./config/db.config.js";
 import { initSocket } from "./config/socketio.config.js";
 pool.connect().then(()=> console.log("database connected successfully")).catch((error)=> console.log(error));
 const PORT = env.PORT;
-const app = express();
+export const app = express();
 const server = http.createServer(app);
 const IO = initSocket(server);
 app.use((req, res, next) => {

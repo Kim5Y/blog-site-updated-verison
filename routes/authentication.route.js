@@ -40,7 +40,7 @@ authenticationRouter.post(
   verifyOtpValidator,
   verifyOtp
 );
-authenticationRouter.post("/login", strictLimiter, login);
+authenticationRouter.post("/login", strictLimiter,loginValidator, login);
 authenticationRouter.get(
   "/profile/:id",
   flexibleLimiter,

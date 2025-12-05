@@ -25,14 +25,16 @@
   },
   "devDependencies": {
     "jest": "^30.2.0",
-    "nodemon": "^3.1.10"
+    "nodemon": "^3.1.10",
+    "supertest": "^7.1.4"
   },
   "name": "blog-site",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "jest",
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest"
+,
     "start": "nodemon index.js"
   },
   "repository": {

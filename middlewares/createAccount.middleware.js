@@ -74,22 +74,22 @@ export const loginValidator = [
   body("email")
     .trim()
     .notEmpty()
-    .withMessage("Email is required")
+    .withMessage("email is required")
     .isEmail()
-    .withMessage("Invalid email format"),
+    .withMessage("invalid email format"),
   body("password")
     .notEmpty()
-    .withMessage("Password is required")
+    .withMessage("password is required")
     .isLength({ min: 8 })
-    .withMessage("Password must be at least 8 characters")
+    .withMessage("password must be at least 8 characters")
     .matches(/[A-Z]/)
-    .withMessage("Password must contain at least one uppercase letter")
+    .withMessage("password must contain at least one uppercase letter")
     .matches(/[a-z]/)
-    .withMessage("Password must contain at least one lowercase letter")
+    .withMessage("password must contain at least one lowercase letter")
     .matches(/[0-9]/)
-    .withMessage("Password must contain at least one number")
+    .withMessage("password must contain at least one number")
     .matches(/[@$!%*?&]/)
-    .withMessage("Password must contain at least one special character"),
+    .withMessage("password must contain at least one special character"),
   (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {

@@ -99,3 +99,17 @@ export const markAsRead = async (req, res) => {
     return new ApiError(res, { message: err.message, errors: err }, err);
   }
 };
+
+export const clearAll = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    console.log(userId)
+    const deleteNotifications = await pool.query(
+      `DELETE FROM notifications WHERE user_id=$1`,
+      [userId]
+    );
+    return sendResponse(res, { message: "notifications cleared successfully" });
+  } catch (err) {
+    return new ApiError(res, { message: err.message, errors: err }, err);
+  }
+};
