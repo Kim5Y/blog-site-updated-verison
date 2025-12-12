@@ -2,7 +2,6 @@ import express from "express";
 import refreshTokenController from "../controllers/refreshToken.controller.js";
 import {
   strictLimiter,
-  mediumLimiter,
   flexibleLimiter,
 } from "../config/rateLimit.config.js";
 

@@ -65,28 +65,3 @@ export const createPosts = async (req, res) => {
     );
   }
 };
-// import { fileTypeFromBuffer } from "file-type";
-// import imageUrl from "../config/cloudinary.config.js";
-// export const imageUpload = async (req, res) => {
-//   try {
-//     const realType = await fileTypeFromBuffer(req.file.buffer);
-//     if (!["jpg", "png", "jpeg", "webp"].includes(realType.ext))
-//       return new ApiError(res, {
-//         message: "invalid file format only accepts an image",
-//         statuscode: 400,
-//       });
-//     const image = req.file.buffer;
-//     const cloudIMageUrl = await imageUrl(image);
-//     const query = `
-//       INSERT INTO posts (image_url)
-//       VALUES ($1) WHERE user_id=$2
-//       RETURNING *;
-//     `;
-//     const values = [cloudIMageUrl, req.user.id];
-//     await pool.query(query, values);
-//     return res.sendStatus(200);
-//   } catch (err) {
-//     console.log(err);
-//     return new ApiError(res, { message: err.message, errors: err }, err);
-//   }
-// };

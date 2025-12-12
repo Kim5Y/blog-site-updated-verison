@@ -36,7 +36,7 @@ export default async (req, res) => {
     req.io
       .to(`comment:${postId}`)
       .emit("comment:delete", deleteComment.rows[0]);
-    return res.sendResponse(res, { message: "commend deleted successfullu" });
+    return sendResponse(res, { message: "commend deleted successfully" });
   } catch (err) {
     console.log(err);
     return new ApiError(res, { message: err.message }, err);
@@ -52,7 +52,6 @@ export const getPostComments = async (req, res) => {
     const cacheKey = `comments:page:${page}:limit:${limit}`;
     const cacheCommentData = await client.get(cacheKey);
     if (cacheCommentData) {
-      console.log("fetching from cache");
       const comments = JSON.parse(cacheCommentData);
       return sendResponse(res, comments);
     }
@@ -138,7 +137,7 @@ export const commentReation = async (req, res) => {
           entityType: "comment",
           entityId: commentId,
         });
-      };
+      }
       const updated = result.rows[0];
       return sendResponse(res, {
         message: "Post reaction updated successfully",
@@ -199,7 +198,7 @@ export const edithComment = async (req, res) => {
        RETURNING *`,
       [content, postId, userComment[0].id]
     );
-    if (userComment.rows[0].parent_id !== null) {
+    if (userComment[0].parent_id !== null) {
       req.io.to(`comment:${postId}-${userComment[0].parent_id}`);
       return sendResponse(res, {
         message: "comment updated successfully",

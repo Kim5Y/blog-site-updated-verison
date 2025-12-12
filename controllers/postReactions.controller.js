@@ -15,6 +15,8 @@ export default async (req, res) => {
     const postQuery = await pool.query(`SELECT * FROM posts WHERE id=$1`, [
       postId,
     ]);
+    if (postQuery.rowCount === 0)
+      return new ApiError(res, { message: "invalid post id", statuscode: 400 });
     const post = postQuery.rows[0];
     const reactions = await pool.query(
       `SELECT * FROM post_reactions WHERE post_id = $1 AND user_id = $2`,

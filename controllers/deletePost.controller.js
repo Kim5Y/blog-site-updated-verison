@@ -5,6 +5,7 @@ import pool from "../config/db.config.js";
 export default async (req, res) => {
   try {
     const postId = parseInt(req.params.id);
+    console.log(req.user);
     if (!/^\d+$/.test(postId))
       return new ApiError(res, {
         message: "post id must be a number",
@@ -12,18 +13,16 @@ export default async (req, res) => {
       });
     const query = `SELECT * FROM posts WHERE id = $1`;
     const result = await pool.query(query, [postId]);
-    if (result.user_id !== req.user.id)
-      return new ApiError(res, { message: "invalid", statuscode: 403 });
-    if (result.rowCount <= 0)
+    if (result.rowCount == 0)
       return new ApiError(res, { message: "invalid post id", statuscode: 400 });
+    if (result.rows[0].user_id !== req.user.id)
+      return new ApiError(res, { message: "invalid", statuscode: 403 });
     const POST = result.rows[0];
     const category = POST.category;
-    console.log({ category, POST });
     const deltedPost = await pool.query(`DELETE FROM posts WHERE id = $1`, [
       POST.id,
     ]);
     req.io.to(`post:${postId}`).emit("post:deleted", POST);
-    // const sendNotificationToUser = await sendNotification({userId: req.user.id, });
     return sendResponse(res, { message: "post deleted successfully" });
   } catch (err) {
     console.log(err);

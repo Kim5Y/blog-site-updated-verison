@@ -10,7 +10,6 @@ export default async (req, res, next) => {
   try {
     const refreshToken = req.cookies.refresh_token;
     const authHeader = req.headers.authorization;
-
     if (!authHeader)
       return new ApiError(res, {
         statuscode: 401,
@@ -18,10 +17,10 @@ export default async (req, res, next) => {
       });
     const token = authHeader.startsWith("Bearer ")
       ? authHeader.split(" ")[1]
-      : authHeader;
-
+      : null;
+    // console.log("access token", token);
     if (!token)
-      return new ApiError(res, { statuscode: 401, message: "invalid token" });
+      return new ApiError(res, { statuscode: 401, message: "token is null" });
 
     try {
       const isValidUser = jwt.verify(token, SECRET_ACCESS_KEY);

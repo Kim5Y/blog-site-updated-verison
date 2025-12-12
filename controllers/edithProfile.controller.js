@@ -11,10 +11,30 @@ export default async (req, res) => {
       age: req.body.age ?? undefined,
       profileImageUrl: req.body.profileImageUrl ?? undefined,
     };
+
+    if (payload.username?.length === 0)
+      return new ApiError(res, {
+        message: "invalid username",
+        statuscode: 400,
+      });
+    if (payload.bio?.length === 0)
+      return new ApiError(res, {
+        message: "invalid bio",
+        statuscode: 400,
+      });
+    if (payload.profileImageUrl?.length === 0)
+      return new ApiError(res, {
+        message: "invalid image url",
+        statuscode: 400,
+      });
+    if ((payload.age && payload.age < 18) || isNaN(payload.age))
+      return new ApiError(res, {
+        message: "invaild age",
+        statuscode: 400,
+      });
     const updates = [];
     const values = [];
     let idx = 1;
-
     if (payload.username !== undefined) {
       if (
         typeof payload.username !== "string" ||
@@ -25,6 +45,20 @@ export default async (req, res) => {
           statuscode: 400,
         });
       }
+      if (payload.username === req.user.username)
+        return new ApiError(res, {
+          message: "username cannot be thesame as your previous username",
+          statuscode: 400,
+        });
+      const userExists = await pool.query(
+        "SELECT user_name FROM users WHERE user_name=$1",
+        [payload.username]
+      );
+      if (userExists.rowCount !== 0)
+        return new ApiError(res, {
+          message: "invalid username",
+          statuscode: 400,
+        });
       updates.push(`user_name = $${idx++}`);
       values.push(payload.username.trim());
     }
@@ -62,18 +96,15 @@ export default async (req, res) => {
       updates.push(`image_url = $${idx++}`);
       values.push(payload.profileImageUrl);
     }
-
     if (updates.length === 0) {
       return new ApiError(res, {
         message: "no valid fields provided for update",
         statuscode: 400,
       });
     }
-
     const userId = req.user?.id;
     if (!userId)
       return new ApiError(res, { message: "unauthorized", statuscode: 401 });
-    console.log({ updates, values, idx });
     const query = `
       UPDATE users
       SET ${updates.join(", ")}, updated_at = NOW()

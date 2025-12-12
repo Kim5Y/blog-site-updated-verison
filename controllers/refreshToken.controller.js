@@ -14,9 +14,7 @@ export default async (req, res) => {
       env.REFRESH_TOKEN_SECRET
     );
     if (!userCookieRefreshToken)return new ApiError(res, {message: "invalid", statuscode: 401})
-    console.log(userCookieRefreshToken);
     req.user = userCookieRefreshToken;
-    console.log(req.user.id);
     const user = await pool.query("SELECT * FROM users WHERE id = $1", [
       req.user.id,
     ]);
@@ -45,7 +43,3 @@ export default async (req, res) => {
     return new ApiError(res, {message: err.message, statuscode: 500}, err);
   }
 };
-//continue here asshole
-//next up post creation
-//and push recent commit
-// ERROR HANDLING AND MESSAGE HANDLING ALSO

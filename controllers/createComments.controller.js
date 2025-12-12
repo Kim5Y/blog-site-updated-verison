@@ -34,7 +34,6 @@ export default async (req, res) => {
         [postId, content, parentId, userId]
       );
       const newComment = commentQuery.rows[0];
-      console.log("reqly comment", newComment);
       const countComments = await pool.query(
         `SELECT COUNT(*) FROM comments WHERE parent_id IS NULL`
       );

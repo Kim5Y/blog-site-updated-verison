@@ -8,7 +8,7 @@ import {
   generateRefreshToken,
 } from "../utils/tokens.config.js";
 import pool from "../config/db.config.js";
-import validateEmail from "../utils/email-validator.utils.js";
+// import validateEmail from "../utils/email-validator.utils.js";
 const allowedCategories = [
   "tech",
   "lifestyle",
@@ -16,6 +16,16 @@ const allowedCategories = [
   "travel",
   "food",
   "sports",
+  "entertainment",
+  "business",
+  "education",
+  "food",
+  "fashion",
+  "personal development",
+  "News and current Events",
+  "reviews",
+  "photography",
+  "parenting and Family",
 ];
 export const sendOtp = async (req, res) => {
   try {
@@ -62,6 +72,11 @@ export const sendOtp = async (req, res) => {
     //   return res.status(422).json({
     //     error: true,
     //     message: "invalid email, try another email address",
+    //   });
+    // if (password !== confirmPassword)
+    //   return new ApiError(res, {
+    //     message: "The confirmation password must match the password",
+    //     statuscode: 400,
     //   });
     const otpData = await sendCode(email);
     if (!otpData)
@@ -121,7 +136,7 @@ export const verifyOtp = async (req, res) => {
         message: "OTP code has expired",
         statuscode: 400,
       });
-    if (!(await bcrypt.compare(otpCode, userData.hashedCode)))
+    if (!(await bcrypt.compare(otpCode, userData.otpData.hashedCode)))
       return new ApiError(res, {
         statuscode: 400,
         message: "invalid OTP code",

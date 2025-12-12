@@ -321,6 +321,7 @@ export const verifyEmailResetOtp = async (req, res) => {
     return sendResponse(res, {
       message: "email updated  successfully",
       statusCodes: 201,
+      data: email,
     });
   } catch (err) {
     console.log(err);

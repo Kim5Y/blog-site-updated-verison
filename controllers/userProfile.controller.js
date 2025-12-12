@@ -43,7 +43,7 @@ export default async (req, res) => {
     console.log("fetched from normal db");
     const response = {
       data: { userInfo, userPosts },
-      meta: { limit, page, offset, postCount: postCount.count },
+      meta: { limit, page, offset, postCount: postCount?.count },
     };
     await client.setEx(cacheKey, 60, JSON.stringify(response));
     return sendResponse(res, response);
