@@ -9,7 +9,6 @@ export const sendNotification = async (
       [actorId]
     );
     const actorAccount = query.rows[0];
-    console.log(actorAccount);
     const createNotificationMessage = (action, entityType) => {
       if (action === "new" && entityType === "post") {
         const message = `${actorAccount.user_name} recently shared a post`;
@@ -37,7 +36,6 @@ export const sendNotification = async (
       }
     };
     const message = createNotificationMessage(action, entityType);
-    console.log(message);
 
     if (action === "new" && entityType === "post") {
       const getUsersCategoryQuery = await pool.query(
@@ -63,7 +61,6 @@ export const sendNotification = async (
       });
       return;
     }
-    console.log("reah as;lkfj");
     const result = await pool.query(
       `
     INSERT INTO notifications (
@@ -74,11 +71,9 @@ export const sendNotification = async (
       [userId, actorId, action, entityType, entityId, message]
     );
     const notification = result.rows[0];
-    console.log({ notification });
     req.io.to(`user:${userId}`).emit("notification", notification);
     return notification;
   } catch (error) {
-    console.log("error from the notifications sevices:", error);
     return error;
   }
 };

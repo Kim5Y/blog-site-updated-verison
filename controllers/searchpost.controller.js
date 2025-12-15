@@ -8,13 +8,6 @@ export default async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const offset = (page - 1) * limit;
-    // console.log({ query });
-    // const redistKey = `searchResults:page:${page}:limit:${limit}:offset:${offset}`;
-    // const cachedData = await client.get(redistKey);
-    // if (cachedData) {
-    //   const data = JSON.parse(cachedData);
-    //   return sendResponse(res, { data: data });
-    // }
     const postResult = await searchPost(query, limit, offset);
     const usersResult = await searchUsers(query, limit, offset);
     const results = {

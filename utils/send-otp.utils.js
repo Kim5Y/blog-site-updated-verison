@@ -9,7 +9,6 @@ const transporter = nodemailer.createTransport({
     pass: env.MAILER_PASSWORD,
   },
 });
-
 const sendCode = async (email) => {
   try {
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
@@ -21,9 +20,7 @@ const sendCode = async (email) => {
       subject: "Your OTP Code from our blogging site",
       text: `Your verification code is ${otp}. It expires in 5 minutes.`,
     });
-    console.log(otp);
     if (sendCodeTOEmail) {
-      console.log("code successfully sent");
       return {
         hashedCode,
         expires,

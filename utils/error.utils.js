@@ -20,7 +20,6 @@ class ApiError extends Error {
     } else {
       Error.captureStackTrace(this, this.constructor);
     }
-    console.log("out side error", err);
     const normalizeError = () => {
       if (!err) return{
         success:this.success,
@@ -32,7 +31,7 @@ class ApiError extends Error {
         return {success: this.success,name, message: errMessage, statuscode: statuscode }
       }
     };
-    console.log(normalizeError());
+    normalizeError()
     return res.status(statuscode).json(normalizeError());
   }
 }

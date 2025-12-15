@@ -14,6 +14,7 @@ pool
   .catch((error) => console.log(error));
 const PORT = env.PORT;
 export const app = express();
+app.set("trust proxy", 1);
 const server = http.createServer(app);
 const IO = initSocket(server);
 app.use((req, res, next) => {

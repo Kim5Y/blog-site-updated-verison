@@ -45,7 +45,6 @@ export const sendOtp = async (req, res) => {
         message: "invalid category",
       });
     }
-    console.log("all categories are valid");
     const usernameExists = await pool.query(
       "SELECT * FROM users WHERE user_name = $1 ",
       [username]
@@ -65,19 +64,6 @@ export const sendOtp = async (req, res) => {
           "Your search did not return any results. Please try again with other information.",
         statuscode: 400,
       });
-    // const emailResponse = await validateEmail(email);
-    // const isValidEmail = await emailResponse.data.email_risk
-    //   .address_risk_status;
-    // if (isValidEmail === "high")
-    //   return res.status(422).json({
-    //     error: true,
-    //     message: "invalid email, try another email address",
-    //   });
-    // if (password !== confirmPassword)
-    //   return new ApiError(res, {
-    //     message: "The confirmation password must match the password",
-    //     statuscode: 400,
-    //   });
     const otpData = await sendCode(email);
     if (!otpData)
       return new ApiError(res, {
@@ -103,7 +89,6 @@ export const sendOtp = async (req, res) => {
       statusCodes: 200,
     });
   } catch (err) {
-    console.log(err);
     return new ApiError(
       res,
       {
@@ -169,7 +154,6 @@ export const verifyOtp = async (req, res) => {
       [hashedRefreshedToken, email]
     );
     const userCategories = getDetails.categories;
-    console.log(userCategories);
     res.cookie("refresh_token", refreshToken, {
       httpOnly: true,
       secure: false,

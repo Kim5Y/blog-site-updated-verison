@@ -12,7 +12,6 @@ export default async (req, res) => {
     const cacheKey = `post:page:${page}:limit:${limit}`;
     const cachedPostsExists = await client.get(cacheKey);
     if (cachedPostsExists) {
-      console.log("fetched from cache..");
       const redisData = JSON.parse(cachedPostsExists);
       return sendResponse(res, {
         data: redisData.data,
@@ -33,6 +32,7 @@ export default async (req, res) => {
     await client.setEx(cacheKey, 60, JSON.stringify(response));
     return sendResponse(res, { data: response.data, meta: response.meta });
   } catch (err) {
+    console.log(err);
     return new ApiError(
       res,
       { statuscode: 500, message: err.message, errors: err },
@@ -45,7 +45,6 @@ export const getPostBySlug = async (req, res) => {
     const { slug } = req.params;
     if (!slug)
       return new ApiError(res, { message: "invalid slug", statuscode: 400 });
-    console.log(slug);
     const query = `
     SELECT id, title, slug, content, user_id, created_at
     FROM posts
@@ -56,9 +55,9 @@ export const getPostBySlug = async (req, res) => {
     if (result.rowCount <= 0)
       return new ApiError(res, { message: "post not found", statuscode: 404 });
     const post = result.rows[0];
-    console.log(post);
     return sendResponse(res, { data: post });
   } catch (err) {
+    console.log(err);
     return new ApiError(
       res,
       { statuscode: 500, message: err.message, errors: err },

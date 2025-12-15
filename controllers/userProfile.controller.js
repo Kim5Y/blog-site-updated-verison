@@ -17,7 +17,6 @@ export default async (req, res) => {
     const cacheKey = `userProfileInfo:page:${page}:limit:${limit}`;
     const cachedDataExists = await client.get(cacheKey);
     if (cachedDataExists) {
-      console.log("fetching data from cache");
       const response = JSON.parse(cachedDataExists);
       return sendResponse(res, response);
     }
@@ -40,7 +39,6 @@ export default async (req, res) => {
       userPosts = userPostsQuery.rows[0];
       postCount = postCountQuery.rows[0];
     }
-    console.log("fetched from normal db");
     const response = {
       data: { userInfo, userPosts },
       meta: { limit, page, offset, postCount: postCount?.count },
@@ -72,6 +70,7 @@ export const logout = async (req, res) => {
 
     return sendResponse(res, { message: "logged out successfully" });
   } catch (err) {
+    console.log(err);
     return new ApiError(err, { message: err.message, errors: err }, err);
   }
 };

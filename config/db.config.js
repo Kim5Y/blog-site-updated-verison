@@ -17,5 +17,4 @@ pool = new Pool({
     port: env.PG_PORT,
   });
 }
-if(!pool) console.log("pool wasnt set up")
 export default pool;

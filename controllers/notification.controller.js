@@ -88,7 +88,6 @@ export const markAsRead = async (req, res) => {
         statuscode: 400,
       });
     const updatedNotification = notificaiton.rows[0];
-    console.log({ updatedNotification });
     return sendResponse(res, {
       message: "notificaitons marked as read successfully",
       data: updatedNotification,
@@ -102,7 +101,6 @@ export const markAsRead = async (req, res) => {
 export const clearAll = async (req, res) => {
   try {
     const userId = req.user.id;
-    console.log(userId)
     const deleteNotifications = await pool.query(
       `DELETE FROM notifications WHERE user_id=$1`,
       [userId]

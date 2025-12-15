@@ -5,7 +5,6 @@ import pool from "../config/db.config.js";
 export default async (req, res) => {
   try {
     const postId = parseInt(req.params.id);
-    console.log(req.user);
     if (!/^\d+$/.test(postId))
       return new ApiError(res, {
         message: "post id must be a number",
