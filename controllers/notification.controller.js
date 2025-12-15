@@ -31,7 +31,6 @@ export const getNotification = async (req, res) => {
         [userId]
       ),
     ]);
-
     const total = count.rows[0].total;
     const totalPages = Math.ceil(total / limit);
     const result = {
@@ -57,7 +56,7 @@ export const markAsRead = async (req, res) => {
   try {
     const notificationId = parseInt(req.params.id);
     const userId = req.user.id;
-    console.log(userId);
+    // console.log(userId);
     if (isNaN(notificationId))
       return new ApiError(res, {
         message: "invalid notifcation id",
@@ -91,7 +90,7 @@ export const markAsRead = async (req, res) => {
     const updatedNotification = notificaiton.rows[0];
     console.log({ updatedNotification });
     return sendResponse(res, {
-      message: "notificaitons updated successfully",
+      message: "notificaitons marked as read successfully",
       data: updatedNotification,
     });
   } catch (err) {
