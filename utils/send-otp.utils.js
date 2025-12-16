@@ -3,12 +3,11 @@ import bcrypt from "bcrypt";
 import env from "../config/env.js";
 // import pool from "../config/db.config.js";
 const transporter = nodemailer.createTransport({
-  host: "smtp.ethereal.email",
-  port: 587,
-  secure: false,
+  host: env.MAIL_TRAP_HOST,
+  port: env.MAIL_TRAP_PORT,
   auth: {
-    user: env.MAILER_EMAIL,
-    pass: env.MAILER_PASSWORD,
+    user: env.MAIL_TRAP_USER,
+    pass: env.MAIL_TRAP_PASSWORD,
   },
 });
 const sendCode = async (email) => {

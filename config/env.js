@@ -21,4 +21,8 @@ export default {
   PG_DATABASE_URL: process.env.DATABASE_URL,
   NODE_ENV: process.env.NODE_ENV,
   NEON_DB: process.env.NEON_PSQL_DB,
+  MAIL_TRAP_USER: process.env.MAIL_TRAP_USER,
+  MAIL_TRAP_HOST: process.env.MAIL_TRAP_HOST,
+  MAIL_TRAP_PORT: process.env.MAIL_TRAP_PORT,
+  MAIL_TRAP_PASSWORD: process.env.MAIL_TRAP_PASSWORD,
 };
