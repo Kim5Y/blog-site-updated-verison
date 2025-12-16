@@ -3,7 +3,9 @@ import bcrypt from "bcrypt";
 import env from "../config/env.js";
 // import pool from "../config/db.config.js";
 const transporter = nodemailer.createTransport({
-  service: "gmail",
+  host: "smtp.ethereal.email",
+  port: 587,
+  secure: false,
   auth: {
     user: env.MAILER_EMAIL,
     pass: env.MAILER_PASSWORD,
