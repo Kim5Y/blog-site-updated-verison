@@ -3,7 +3,7 @@ import env from "./env.js";
 let pool;
 if (env.NODE_ENV === "production") {
 pool = new Pool({
-    connectionString: env.PG_DATABASE_URL,
+    connectionString: env.NEON_DB,
     ssl: {
       rejectUnauthorized: false,
     },

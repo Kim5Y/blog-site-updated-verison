@@ -20,4 +20,5 @@ export default {
   CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET,
   PG_DATABASE_URL: process.env.DATABASE_URL,
   NODE_ENV: process.env.NODE_ENV,
+  NEON_DB: process.env.NEON_PSQL_DB,
 };
