@@ -3,10 +3,14 @@ import env from "./env.js";
 let pool;
 if (env.NODE_ENV === "production") {
   pool = new Pool({
-    host: env.NEON_HOST,
-    database: env.NEON_DATABASE,
-    user: env.NEON_USER,
-    password: env.NEON_PASSWORD,
+    // host: env.NEON_HOST,
+    // database: env.NEON_DATABASE,
+    // user: env.NEON_USER,
+    // password: env.NEON_PASSWORD,
+    max: 10,
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 10000,
+    connectionString: env.PG_DATABASE_URL,
     ssl: {
       require: true,
       rejectUnauthorized: false,
@@ -21,4 +25,7 @@ if (env.NODE_ENV === "production") {
     port: env.PG_PORT,
   });
 }
+pool.on("error", (err) => {
+  console.log("postgres error:", err);
+});
 export default pool;
