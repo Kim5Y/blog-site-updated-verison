@@ -29,5 +29,6 @@ export default {
   NEON_DATABASE: process.env.PGDATABASE,
   NEON_USER: process.env.PGUSER,
   NEON_PASSWORD: process.env.PGPASSWORD,
-  RESEND_API_KEY: process.env.RESEND_API_KEY
+  RESEND_API_KEY: process.env.RESEND_API_KEY,
+  MAIL_SEND_API_KEY: process.env.MAIL_SEND_API_KEY
 };

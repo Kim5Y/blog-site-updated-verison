@@ -7,6 +7,7 @@ process.on("uncaughtException", (err) => {
 import express from "express";
 import http from "http";
 import cookieParser from "cookie-parser";
+import helmet from "helmet"
 import "./crone/notificationCleaner.js";
 import cors from "cors";
 import ApiError from "./utils/error.utils.js";
@@ -14,12 +15,13 @@ import router from "./routes/router.js";
 import env from "./config/env.js";
 import pool from "./config/db.config.js";
 import { initSocket } from "./config/socketio.config.js";
-pool
-  .connect()
-  .then(() => console.log("database connected successfully"))
-  .catch((error) => console.log(error));
+// pool
+//   .connect()
+//   .then(() => console.log("database connected successfully"))
+//   .catch((error) => console.log(error));
 const PORT = env.PORT;
 export const app = express();
+app.use(helmet());
 app.set("trust proxy", 1);
 const server = http.createServer(app);
 const IO = initSocket(server);
