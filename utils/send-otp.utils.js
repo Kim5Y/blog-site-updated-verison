@@ -2,7 +2,9 @@ import nodemailer from "nodemailer";
 import bcrypt from "bcrypt";
 import env from "../config/env.js";
 const transporter = nodemailer.createTransport({
-  service: "gmail",
+  host: "smtp.gmail.com",
+  port: 465,
+  secure: true,
   auth: {
     user: "gwonpam@gmail.com",
     pass: "cqfi wxmw knhw asaz",
@@ -34,3 +36,5 @@ const sendCode = async (email) => {
   }
 };
 export default sendCode;
+
+//add this to the email config up there
