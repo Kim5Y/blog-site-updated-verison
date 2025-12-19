@@ -27,8 +27,8 @@ commentsRouter.post("/reaction/:id", mediumLimiter, verifyUser, commentReation);
 commentsRouter.patch(
   "/:id",
   mediumLimiter,
-  createCommentValidation,
   verifyUser,
+  createCommentValidation,
   edithComment
 );
 export default commentsRouter;

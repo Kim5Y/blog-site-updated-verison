@@ -13,10 +13,15 @@ export default async (req, res) => {
       return new ApiError(res, {
         message: "post id or comment id can not be falsy",
       });
+    if (!commentId)
+      return new ApiError(res, {
+        message: "invalid comment id",
+        statuscode: 400,
+      });
     if (isNaN(postId))
-      return new ApiError(res, { message: "invalid comment id" });
+      return new ApiError(res, { message: "invalid post id", statuscode: 400 });
     if (isNaN(commentId))
-      return new ApiError(res, { message: "invalid comment id" });
+      return new ApiError(res, { message: "invalid post id", statuscode: 400 });
     const checkComments = await pool.query(
       `SELECT * FROM comments WHERE id=$1 AND post_id=$2 AND user_id=$3`,
       [commentId, postId, userId]
@@ -117,6 +122,8 @@ export const commentReation = async (req, res) => {
     const postQuery = await pool.query("SELECT id FROM posts WHERE id=$1", [
       postId,
     ]);
+    if (postQuery.rowCount === 0)
+      return new ApiError(res, { message: "invalid post id", statuscode: 400 });
     const post = postQuery.rows[0];
     const { rows: userReaction } = await pool.query(
       `SELECT * FROM comment_reactions WHERE comment_id = $1 AND user_id = $2`,
