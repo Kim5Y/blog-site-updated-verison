@@ -33,7 +33,6 @@ export default async (req, res) => {
         statuscode: 400,
       });
     const otpData = await sendCode(email);
-    console.log(otpData);
     if (!otpData)
       return new ApiError(res, {
         message: "failed to send code",
@@ -43,7 +42,7 @@ export default async (req, res) => {
     const sessionToken = generateResetPasswordSessionToken(payload);
     res.cookie("session_token", sessionToken, {
       httpOnly: true,
-      secure: false,
+      secure: true,
       sameSite: "strict",
     });
     await client.setEx(email, 360, JSON.stringify(otpData));
@@ -115,8 +114,6 @@ export const verifyPasswordOtp = async (req, res) => {
         message: "OTP code has expired",
         statuscode: 400,
       });
-    console.log({ codeData: codeData.hashedCode });
-    console.log({ otpCode });
     if (!(await bcrypt.compare(otpCodeStr, codeData.hashedCode)))
       return new ApiError(res, {
         statuscode: 400,
@@ -181,7 +178,6 @@ export const resetPassword = async (req, res) => {
     const session = jwt.verify(sessionToken, env.REFRESH_TOKEN_SECRET);
     if (!session)
       return new ApiError(res, { message: "invalid", statuscode: 401 });
-    console.log(session);
     const email = session.email;
     const recentPasswordQuery = await pool.query(
       `SELECT password_hash FROM users WHERE email=$1`,
@@ -201,7 +197,7 @@ export const resetPassword = async (req, res) => {
     ]);
     res.clearCookie("session_token", {
       httpOnly: true,
-      secure: false,
+      secure: true,
       sameSite: "strict",
     });
     return sendResponse(res, { message: "password updated", statusCodes: 201 });
@@ -236,7 +232,6 @@ export const sendResetEmailOtp = async (req, res) => {
         statuscode: 400,
       });
     const otpData = await sendCode(email);
-    console.log(otpData);
     if (!otpData)
       return new ApiError(res, {
         message: "failed to send code",
@@ -245,7 +240,7 @@ export const sendResetEmailOtp = async (req, res) => {
     await client.setEx(email, 360, JSON.stringify(otpData));
     res.cookie("new_email", email, {
       httpOnly: true,
-      secure: false, //commot this line
+      secure: true,
       sameSite: "strict",
     });
     return sendResponse(res, {

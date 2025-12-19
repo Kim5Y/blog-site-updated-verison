@@ -31,11 +31,11 @@ export default async (req, res) => {
     if (checkComments.rows[0].parent_id !== null) {
       req.io
         .to(`post:${postId}-${checkComments.rows[0].parent_id}`)
-        .emit("comment:delete", deleteComment.rows[0]);
+        .emit("reply:deleted", deleteComment.rows[0]);
     }
     req.io
       .to(`comment:${postId}`)
-      .emit("comment:delete", deleteComment.rows[0]);
+      .emit("comment:deleted", deleteComment.rows[0]);
     return sendResponse(res, { message: "commend deleted successfully" });
   } catch (err) {
     console.log(err);
@@ -100,6 +100,7 @@ export const getPostComments = async (req, res) => {
 export const commentReation = async (req, res) => {
   try {
     const commentId = parseInt(req.params.id);
+    const { postId } = parseInt(req.body);
     const userId = parseInt(req.user.id);
     if (isNaN(commentId))
       return new ApiError(res, { message: "invalid comment id" });
@@ -113,6 +114,10 @@ export const commentReation = async (req, res) => {
         message: "comment not found check the comment id",
         statuscode: 404,
       });
+    const postQuery = await pool.query("SELECT id FROM posts WHERE id=$1", [
+      postId,
+    ]);
+    const post = postQuery.rows[0];
     const { rows: userReaction } = await pool.query(
       `SELECT * FROM comment_reactions WHERE comment_id = $1 AND user_id = $2`,
       [commentId, userId]
@@ -139,6 +144,11 @@ export const commentReation = async (req, res) => {
         });
       }
       const updated = result.rows[0];
+      req.io.to(`comment:${post.id}`).emit("comment:reactionLike", {
+        commentId,
+        reaction: updated,
+        total_likes: Number(totalLikes.rows[0].likes),
+      });
       return sendResponse(res, {
         message: "Post reaction updated successfully",
         data: {
@@ -156,6 +166,10 @@ export const commentReation = async (req, res) => {
       `SELECT COUNT(*) AS likes FROM comment_reactions WHERE comment_id = $1 AND reaction_type = 'like'`,
       [commentId]
     );
+    req.io.to(`comment:${post.id}`).emit("comment:reactionDislike", {
+      commentId,
+      total_likes: Number(totalLikes.rows[0].likes),
+    });
     return sendResponse(res, {
       message: "Post reaction updated successfully",
       data: {
@@ -199,13 +213,15 @@ export const edithComment = async (req, res) => {
       [content, postId, userComment[0].id]
     );
     if (userComment[0].parent_id !== null) {
-      req.io.to(`comment:${postId}-${userComment[0].parent_id}`);
+      req.io
+        .to(`comment:${postId}-${userComment[0].parent_id}`)
+        .emit("reply:updated", updatedComment[0]);
       return sendResponse(res, {
         message: "comment updated successfully",
         data: updatedComment[0],
       });
     }
-    req.io.to(`post:${postId}`).emit("comment:edith", updatedComment[0]);
+    req.io.to(`post:${postId}`).emit("comment:updated", updatedComment[0]);
     return sendResponse(res, {
       message: "comment updated successfully",
       data: updatedComment[0],

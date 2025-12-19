@@ -39,6 +39,24 @@ export const initSocket = (server, res) => {
         socket.join(`category-${category}`);
       });
       socket.join(`user:${isValidUser.id}`);
+      socket.on("join:post", ({ postId }) => {
+        socket.join(`post:${postId}`);
+      });
+      socket.on("leave:post", ({ postId }) => {
+        socket.leave(`post:${postId}`);
+      });
+      socket.on("join:comment", ({ postId }) => {
+        socket.join(`comment:${postId}`);
+      });
+      socket.on("leave:comment", ({ postId }) => {
+        socket.leave(`comment:${postId}`);
+      });
+      socket.on("join:reply", ({ postId, parentId }) => {
+        socket.join(`reply:${postId}-${parentId}`);
+      });
+      socket.on("leave:reply", ({ postId, parentId }) => {
+        socket.leave(`reply:${postId}-${parentId}`);
+      });
       console.log(`${isValidUser.username} has joined: user${isValidUser.id}`);
       socket.on("disconnect", () => {
         console.log("Socket disconnected:", socket.id);

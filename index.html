@@ -125,10 +125,10 @@
         const postElement = document.createElement("div");
         postElement.className = "post";
         postElement.innerHTML = `
-                <h3>${post.title}</h3>
-                <p>${post.content}</p>
-                <small>Category: ${post.category}</small>
-            `;
+                      <h3>${post.title}</h3>
+                      <p>${post.content}</p>
+                      <small>Category: ${post.category}</small>
+                  `;
         postsContainer.prepend(postElement);
       }
       // Socket connection status
@@ -136,6 +136,42 @@
         console.log("Connected to server");
       });
 
+      //join post room
+      socket.emit(`join:post`, { postId });
+      //leave post room
+      socket.emit("leave:post", { postId });
+      //join top level post comments
+      socket.emit("join:comment", { postId });
+      //leave top level post comments
+      socket.emit("leave:comment", { postId });
+      //join replies (low level comments)
+      socket.emit("join:reply", { postId, parentId });
+      //leave replies
+      socket.emit("leave:reply", { postId, parentId });
+
+      //listen for events
+      //posts
+      socket.on("post:new", data);
+      socket.on("post:updated", data);
+      socket.on("post:deleted", data);
+      socket.on("post:reactionDislike", data);
+      socket.on("post:reactionLike", data);
+      
+
+      //comments
+      socket.on("comment:new", data);
+      socket.on("comment:updated", data);
+      socket.on("comment:deleted", data);
+      socket.on("comment:reactionLike", data);
+      socket.on("comment:reactionDislike", data);
+      //reply
+      socket.on("reply:new", data);
+      socket.on("reply:updated", data);
+      socket.on("reply:deleted", data);
+      //user notifications 
+      socket.on("notification", data);
+
+      
       socket.on("disconnect", () => {
         console.log("Disconnected from server");
       });

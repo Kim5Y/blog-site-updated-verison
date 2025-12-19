@@ -8,7 +8,6 @@ import {
   generateRefreshToken,
 } from "../utils/tokens.config.js";
 import pool from "../config/db.config.js";
-// import validateEmail from "../utils/email-validator.utils.js";
 const allowedCategories = [
   "tech",
   "lifestyle",
@@ -156,7 +155,7 @@ export const verifyOtp = async (req, res) => {
     const userCategories = getDetails.categories;
     res.cookie("refresh_token", refreshToken, {
       httpOnly: true,
-      secure: false,
+      secure: true,
       sameSite: "strict",
     });
     await client.del(email);

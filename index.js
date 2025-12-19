@@ -1,13 +1,15 @@
 process.on("unhandledRejection", (err) => {
   console.error("Unhandled Rejection:", err);
+  process.exit(1);
 });
 process.on("uncaughtException", (err) => {
   console.error("Uncaught Exception:", err);
+  process.exit(1);
 });
 import express from "express";
 import http from "http";
 import cookieParser from "cookie-parser";
-import helmet from "helmet"
+import helmet from "helmet";
 import "./crone/notificationCleaner.js";
 import cors from "cors";
 import ApiError from "./utils/error.utils.js";

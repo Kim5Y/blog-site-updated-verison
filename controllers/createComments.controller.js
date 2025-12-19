@@ -39,7 +39,7 @@ export default async (req, res) => {
       );
       req.io
         .to(`comment:${postQuery.rows[0].id}-${parentId}`)
-        .emit("comment:new", newComment);
+        .emit("reply:new", newComment);
       if (userId != findParentComment.rows[0].user_id) {
         sendNotification(req, {
           userId: findParentComment.rows[0].user_id,

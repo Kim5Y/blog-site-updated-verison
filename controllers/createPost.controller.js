@@ -4,7 +4,6 @@ import slugify from "slugify";
 import sendResponse from "../utils/sendResponse.util.js";
 import { sendNotification } from "../services/notifications.service.js";
 const allowedCategories = ["tech", "lifestyle", "health", "travel", "food"];
-
 export const createPosts = async (req, res) => {
   try {
     const { title, content, category, image_url } = req.body;
@@ -39,7 +38,6 @@ export const createPosts = async (req, res) => {
       result = await pool.query(query, values);
     }
     const newPost = result.rows[0];
-    console.log(newPost);
     req.io.to(`category-${category}`).emit("post:new", newPost);
     await sendNotification(req, {
       actorId: newPost.user_id,
@@ -54,6 +52,7 @@ export const createPosts = async (req, res) => {
       data: { newPost },
     });
   } catch (err) {
+    console.log(err);
     return new ApiError(
       res,
       {
