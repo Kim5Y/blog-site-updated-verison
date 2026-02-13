@@ -1,12 +1,7 @@
 import ApiError from "../utils/error.utils.js";
 import sendResponse from "../utils/sendResponse.util.js";
-import bcrypt from "bcrypt";
-import { client } from "../config/redis.config.js";
-import sendCode from "../utils/send-otp.utils.js";
-import pool from "../config/db.config.js";
-import jwt from "jsonwebtoken";
-import { generateResetPasswordSessionToken } from "../utils/tokens.config.js";
-import env from "../config/env.js";
+import * as AuthService from "../services/auth.service.js";
+
 export default async (req, res) => {
   try {
     let { email } = req.body;
@@ -22,30 +17,15 @@ export default async (req, res) => {
         message: "invalid email format",
         statuscode: 400,
       });
-    const emailExists = await pool.query(
-      "SELECT email FROM users WHERE email=$1",
-      [email]
-    );
-    if (emailExists.rowCount === 0)
-      return new ApiError(res, {
-        message:
-          "Your search did not return any results. Please try again with other information.",
-        statuscode: 400,
-      });
-    const otpData = await sendCode(email);
-    if (!otpData)
-      return new ApiError(res, {
-        message: "failed to send code",
-        statuscode: 500,
-      });
-    const payload = { email };
-    const sessionToken = generateResetPasswordSessionToken(payload);
-    res.cookie("session_token", sessionToken, {
+
+    const result = await AuthService.sendPasswordResetOtp(email);
+
+    res.cookie("session_token", result.sessionToken, {
       httpOnly: true,
       secure: true,
       sameSite: "strict",
     });
-    await client.setEx(email, 360, JSON.stringify(otpData));
+
     return sendResponse(res, {
       message: `OTP code successfully sent to ${email}, expires in 6minutes`,
       statusCodes: 200,
@@ -94,31 +74,13 @@ export const verifyPasswordOtp = async (req, res) => {
         message: "OTP code must be 4-6 digits",
         statuscode: 400,
       });
-    const session = jwt.verify(sessionToken, env.REFRESH_TOKEN_SECRET);
-    if (!session)
-      return new ApiError(res, {
-        message: "invalid session id",
-        statuscode: 400,
-      });
-    const getCodeDataFromCache = await client.get(email);
-    if (!getCodeDataFromCache)
-      return new ApiError(res, {
-        message: "otp code has expired",
-        statuscode: 404,
-      });
-    const codeData = JSON.parse(getCodeDataFromCache);
 
-    const otpCodeHasExpired = new Date(codeData.expires) < new Date();
-    if (otpCodeHasExpired)
-      return new ApiError(res, {
-        message: "OTP code has expired",
-        statuscode: 400,
-      });
-    if (!(await bcrypt.compare(otpCodeStr, codeData.hashedCode)))
-      return new ApiError(res, {
-        statuscode: 400,
-        message: "invalid OTP code",
-      });
+    await AuthService.verifyPasswordOtp({
+      email,
+      otpCode: otpCodeStr,
+      sessionToken,
+    });
+
     return res.sendStatus(200);
   } catch (err) {
     return new ApiError(res, { message: err.message, errors: err }, err);
@@ -175,26 +137,9 @@ export const resetPassword = async (req, res) => {
         message: "Password must contain at least one special character.",
       };
     }
-    const session = jwt.verify(sessionToken, env.REFRESH_TOKEN_SECRET);
-    if (!session)
-      return new ApiError(res, { message: "invalid", statuscode: 401 });
-    const email = session.email;
-    const recentPasswordQuery = await pool.query(
-      `SELECT password_hash FROM users WHERE email=$1`,
-      [email]
-    );
-    const recentPassword = recentPasswordQuery.rows[0].password_hash;
-    const passwordIsTheSame = await bcrypt.compare(password, recentPassword);
-    if (passwordIsTheSame)
-      return new ApiError(res, {
-        message: "new password can not be theSame as the old password",
-        statuscode: 400,
-      });
 
-    const newHashedPassword = await bcrypt.hash(password, 10);
-    await pool.query(`UPDATE users SET password_hash = $1`, [
-      newHashedPassword,
-    ]);
+    await AuthService.resetPassword({ password, sessionToken });
+
     res.clearCookie("session_token", {
       httpOnly: true,
       secure: true,
@@ -222,23 +167,10 @@ export const sendResetEmailOtp = async (req, res) => {
         message: "invalid email format",
         statuscode: 400,
       });
-    const emailExists = await pool.query(
-      "SELECT email FROM users WHERE email=$1",
-      [email]
-    );
-    if (emailExists.rowCount !== 0)
-      return new ApiError(res, {
-        message: "new email can not be thesame as the recent email",
-        statuscode: 400,
-      });
-    const otpData = await sendCode(email);
-    if (!otpData)
-      return new ApiError(res, {
-        message: "failed to send code",
-        statuscode: 500,
-      });
-    await client.setEx(email, 360, JSON.stringify(otpData));
-    res.cookie("new_email", email, {
+
+    const result = await AuthService.sendEmailUpdateOtp(email);
+
+    res.cookie("new_email", result.email, {
       httpOnly: true,
       secure: true,
       sameSite: "strict",
@@ -284,39 +216,17 @@ export const verifyEmailResetOtp = async (req, res) => {
         message: "OTP code must be 4-6 digits",
         statuscode: 400,
       });
-    const otpData = await client.get(email);
-    if (!otpData)
-      return new ApiError(res, {
-        message: "otp code has expired",
-        statuscode: 404,
-      });
 
-    const codeData = JSON.parse(otpData);
-    const otpCodeHasExpired = new Date(codeData.expires) < new Date();
-    if (otpCodeHasExpired)
-      return new ApiError(res, {
-        message: "OTP code has expired",
-        statuscode: 400,
-      });
-    if (!(await bcrypt.compare(otpCodeStr, codeData.hashedCode)))
-      return new ApiError(res, {
-        statuscode: 400,
-        message: "invalid OTP code",
-      });
+    const updatedEmail = await AuthService.verifyEmailUpdateOtp({
+      otpCode: otpCodeStr,
+      email,
+      userId,
+    });
 
-    const updateEmail = await pool.query(
-      "UPDATE users SET email=$1 WHERE id=$2",
-      [email, userId]
-    );
-    if (updateEmail.rowCount == 0)
-      return new ApiError(res, {
-        message: "faild to update email",
-        statuscode: 500,
-      });
     return sendResponse(res, {
       message: "email updated  successfully",
       statusCodes: 201,
-      data: email,
+      data: updatedEmail,
     });
   } catch (err) {
     console.log(err);

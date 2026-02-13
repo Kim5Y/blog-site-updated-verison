@@ -1,83 +1,27 @@
 import ApiError from "../utils/error.utils.js";
-import pool from "../config/db.config.js";
 import sendResponse from "../utils/sendResponse.util.js";
-import { sendNotification } from "../services/notifications.service.js";
+import * as PostService from "../services/post.service.js";
 
 export default async (req, res) => {
   try {
     const postId = parseInt(req.params.id);
-    if (!/^\d+$/.test(postId))
-      return new ApiError(res, {
-        message: "post id must be a number",
-        statuscode: 400,
-      });
-    const userId = req.user.id;
-    const postQuery = await pool.query(`SELECT * FROM posts WHERE id=$1`, [
-      postId,
-    ]);
-    if (postQuery.rowCount === 0)
-      return new ApiError(res, { message: "invalid post id", statuscode: 400 });
-    const post = postQuery.rows[0];
-    const reactions = await pool.query(
-      `SELECT * FROM post_reactions WHERE post_id = $1 AND user_id = $2`,
-      [postId, userId]
-    );
-    let result;
-    if (reactions.rowCount === 0) {
-      result = await pool.query(
-        `INSERT INTO post_reactions (user_id, post_id, reaction_type, created_at)
-         VALUES ($1, $2, $3, NOW())
-         RETURNING *`,
-        [userId, postId, "like"]
-      );
-      const totalLikes = await pool.query(
-        `SELECT COUNT(*) AS likes FROM post_reactions WHERE post_id = $1 AND reaction_type = 'like'`,
-        [postId]
-      );
-      const updated = result.rows[0];
-      req.io.to(`post:${postId}`).emit("post:reactionLike", {
-        postId,
-        total_likes: Number(totalLikes.rows[0].likes),
-      });
-      if (userId != post.user_id) {
-        const notification = await sendNotification(req, {
-          userId: post.user_id,
-          actorId: userId,
-          action: "like",
-          entityType: "post",
-          entityId: postId,
-        });
-      }
-      return sendResponse(res, {
-        message: "Post reaction updated successfully",
-        data: {
-          postId,
-          reaction: updated,
-          total_likes: Number(totalLikes.rows[0].likes),
-        },
-      });
-    }
-    await pool.query(
-      `DELETE FROM post_reactions WHERE post_id=$1 AND user_id=$2`,
-      [postId, userId]
-    );
-    const totalLikes = await pool.query(
-      `SELECT COUNT(*) AS likes FROM post_reactions WHERE post_id = $1 AND reaction_type = 'like'`,
-      [postId]
-    );
-    await req.io.to(`post:${postId}`).emit("post:reactionDislike", {
-      postId,
-      total_likes: Number(totalLikes.rows[0].likes),
-    });
+    // Service handles postId validation but controller passed it as parsed int.
+    // Logic: if not a number... handled in service.
+
+    const result = await PostService.reactToPost(postId, req.user.id, req);
+
     return sendResponse(res, {
       message: "Post reaction updated successfully",
-      data: {
-        postId,
-        total_likes: Number(totalLikes.rows[0].likes),
-      },
+      data: result,
     });
   } catch (err) {
     console.error(err);
+    if (
+      err.message === "invalid post id" ||
+      err.message === "post id must be a number"
+    ) {
+      return new ApiError(res, { message: err.message, statuscode: 400 });
+    }
     return new ApiError(res, { message: err.message, errors: err }, err);
   }
 };

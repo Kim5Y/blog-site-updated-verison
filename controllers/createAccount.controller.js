@@ -1,31 +1,7 @@
-import bcrypt from "bcrypt";
-import { client } from "../config/redis.config.js";
 import ApiError from "../utils/error.utils.js";
 import sendResponse from "../utils/sendResponse.util.js";
-import sendCode from "../utils/send-otp.utils.js";
-import {
-  generateAccessToken,
-  generateRefreshToken,
-} from "../utils/tokens.config.js";
-import pool from "../config/db.config.js";
-const allowedCategories = [
-  "tech",
-  "lifestyle",
-  "health",
-  "travel",
-  "food",
-  "sports",
-  "entertainment",
-  "business",
-  "education",
-  "food",
-  "fashion",
-  "personal development",
-  "News and current Events",
-  "reviews",
-  "photography",
-  "parenting and Family",
-];
+import * as AuthService from "../services/auth.service.js";
+
 export const sendOtp = async (req, res) => {
   try {
     const { username, email, password, categories } = req.body;
@@ -35,56 +11,16 @@ export const sendOtp = async (req, res) => {
         message: "input field cannot be empty",
       });
     }
-    const allValidCategories = categories.every((category) =>
-      allowedCategories.includes(category)
-    );
-    if (!allValidCategories) {
-      return new ApiError(res, {
-        statuscode: 400,
-        message: "invalid category",
-      });
-    }
-    const usernameExists = await pool.query(
-      "SELECT * FROM users WHERE user_name = $1 ",
-      [username]
-    );
-    if (usernameExists.rowCount > 0)
-      return new ApiError(res, {
-        statuscode: 400,
-        message: "invalid username",
-      });
-    const emailExists = await pool.query(
-      "SELECT * FROM users WHERE email = $1 ",
-      [email]
-    );
-    if (emailExists.rowCount > 0)
-      return new ApiError(res, {
-        message:
-          "Your search did not return any results. Please try again with other information.",
-        statuscode: 400,
-      });
-    const otpData = await sendCode(email);
-    if (!otpData)
-      return new ApiError(res, {
-        message: "failed to send code",
-        statuscode: 500,
-      });
-    const newUser = {
+
+    const result = await AuthService.sendOtp({
       username,
+      email,
       password,
-      otpData,
       categories,
-    };
-    const savedOtpData = await client.set(email, JSON.stringify(newUser), {
-      EX: 360,
     });
-    if (!savedOtpData)
-      return new ApiError(res, {
-        message: "failed to send OTP code",
-        statuscode: 404,
-      });
+
     return sendResponse(res, {
-      message: `OTP code successfully sent to ${email}, expires in 6minutes`,
+      message: result.message,
       statusCodes: 200,
     });
   } catch (err) {
@@ -95,10 +31,11 @@ export const sendOtp = async (req, res) => {
         message: err.message,
         errors: err,
       },
-      err
+      err,
     );
   }
 };
+
 export const verifyOtp = async (req, res) => {
   try {
     const { email, otpCode } = req.body;
@@ -107,62 +44,19 @@ export const verifyOtp = async (req, res) => {
         statuscode: 400,
         message: "input cannot be empty",
       });
-    const getDetails = await client.get(email);
-    if (!getDetails)
-      return new ApiError(res, {
-        message: "OTP code has expired ",
-        statuscode: 401,
-      });
-    const userData = JSON.parse(getDetails);
-    const otpCodeHasExpired = new Date(userData.otpData.expires) < new Date();
-    if (otpCodeHasExpired)
-      return new ApiError(res, {
-        message: "OTP code has expired",
-        statuscode: 400,
-      });
-    if (!(await bcrypt.compare(otpCode, userData.otpData.hashedCode)))
-      return new ApiError(res, {
-        statuscode: 400,
-        message: "invalid OTP code",
-      });
-    const hashedPassword = await bcrypt.hash(userData.password, 10);
-    const newValidUser = {
-      user_name: userData.username,
-      password_hash: hashedPassword,
-      email: email,
-      categories: userData.categories,
-    };
-    const query = `INSERT INTO users (user_name, password_hash, email, categories) VALUES ($1, $2, $3, $4) RETURNING id;`;
-    const values = [
-      newValidUser.user_name,
-      newValidUser.password_hash,
-      newValidUser.email,
-      newValidUser.categories,
-    ];
-    const result = await pool.query(query, values);
-    const id = result.rows[0];
-    const payload = {
-      id: id.id,
-      user_name: newValidUser.user_name,
-    };
-    const accessToken = generateAccessToken(payload);
-    const refreshToken = generateRefreshToken(payload);
-    const hashedRefreshedToken = await bcrypt.hash(refreshToken, 8);
-    await pool.query(
-      `UPDATE users SET refresh_token = array_append(refresh_token, $1) WHERE email = $2`,
-      [hashedRefreshedToken, email]
-    );
-    const userCategories = getDetails.categories;
-    res.cookie("refresh_token", refreshToken, {
+
+    const result = await AuthService.verifyOtpAndCreateUser({ email, otpCode });
+
+    res.cookie("refresh_token", result.refreshToken, {
       httpOnly: true,
       secure: true,
       sameSite: "strict",
     });
-    await client.del(email);
+
     return sendResponse(res, {
       statusCodes: 201,
       message: "user successfully created",
-      data: { token: accessToken },
+      data: { token: result.accessToken },
     });
   } catch (err) {
     console.log(err);
@@ -173,7 +67,7 @@ export const verifyOtp = async (req, res) => {
         message: err.message,
         errors: err,
       },
-      err
+      err,
     );
   }
 };
