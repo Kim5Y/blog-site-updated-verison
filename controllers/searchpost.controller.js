@@ -1,15 +1,18 @@
 import ApiError from "../utils/error.utils.js";
 import sendResponse from "../utils/sendResponse.util.js";
-import { searchPost, searchUsers } from "../model/getPost.model.js";
-import { client } from "../config/redis.config.js";
+import * as PostService from "../services/post.service.js";
+import * as UserService from "../services/user.service.js";
+
 export default async (req, res) => {
   try {
     const query = (req.query.query || "")?.trim();
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const offset = (page - 1) * limit;
-    const postResult = await searchPost(query, limit, offset);
-    const usersResult = await searchUsers(query, limit, offset);
+
+    const postResult = await PostService.searchPosts(query, limit, offset);
+    const usersResult = await UserService.searchUsers(query, limit, offset);
+
     const results = {
       postResult,
       usersResult,
@@ -20,7 +23,7 @@ export default async (req, res) => {
         offset,
       },
     };
-    // await client.setEx(redistKey, 60, JSON.stringify(results));
+
     return sendResponse(res, { data: { postResult, usersResult } });
   } catch (err) {
     console.log(err);

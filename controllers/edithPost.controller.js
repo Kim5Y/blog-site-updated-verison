@@ -1,43 +1,35 @@
 import ApiError from "../utils/error.utils.js";
-import pool from "../config/db.config.js";
 import sendResponse from "../utils/sendResponse.util.js";
+import * as PostService from "../services/post.service.js";
+
 export default async (req, res) => {
   try {
     const postId = parseInt(req.params.id);
     const { title, content } = req.body;
-    if (!/^\d+$/.test(postId))
-      return new ApiError(res, {
-        message: "post id must be a number",
-        statuscode: 400,
-      });
-    if (!title || !content)
-      return new ApiError(res, { message: "invaid input", statuscode: 400 });
-    const postQuery = await pool.query(`SELECT * FROM posts WHERE id = $1`, [
+
+    const updatedPost = await PostService.updatePost(
       postId,
-    ]);
-    const post = postQuery.rows[0];
-    if (postQuery.rowCount <= 0)
-      return new ApiError(res, { message: "invalid post id", statuscode: 400 });
-    if (post.user_id !== req.user.id)
-      return new ApiError(res, { message: "unauthorized", statuscode: 403 });
-    const updatePostQuery = await pool.query(
-      `UPDATE posts
-       SET title = $1, content = $2, updated_at = NOW()
-       WHERE id = $3
-       RETURNING *`,
-      [title, content, post.id]
+      req.user.id,
+      { title, content },
+      req,
     );
-    const updatedPost = updatePostQuery.rows[0];
-    const sendToConnectedUsers = req.io
-      .to(`post:${postId}`)
-      .emit("post:updated", updatedPost);
-    if (sendToConnectedUsers)
-      return sendResponse(res, {
-        message: "post updated sucessfully",
-        data: updatedPost,
-      });
+
+    return sendResponse(res, {
+      message: "post updated sucessfully",
+      data: updatedPost,
+    });
   } catch (err) {
     console.log(err);
+    if (
+      err.message === "invalid post id" ||
+      err.message === "post id must be a number" ||
+      err.message === "invaid input"
+    ) {
+      return new ApiError(res, { message: err.message, statuscode: 400 });
+    }
+    if (err.message === "unauthorized") {
+      return new ApiError(res, { message: "unauthorized", statuscode: 403 });
+    }
     return new ApiError(res, { message: err.message, errors: err }, err);
   }
 };
