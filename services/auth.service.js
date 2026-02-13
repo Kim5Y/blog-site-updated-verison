@@ -195,7 +195,7 @@ export const refreshAccessToken = async (tokenObj) => {
   if (user.rowCount === 0) throw new Error("User not found");
 
   const userPayload = user.rows[0];
-  const userDBRefreshTokens = user.rows[0].refresh_token; // Assuming this is an array
+  const userDBRefreshTokens = user.rows[0].refresh_token;
   let isValidToken = null;
 
   if (userDBRefreshTokens) {
@@ -210,32 +210,10 @@ export const refreshAccessToken = async (tokenObj) => {
 
   if (!isValidToken) throw new Error("Invalid refresh token");
 
-  // Rotate refresh token seems to be the logic in original controller?
-  // Original controller:
-  // await pool.query(`UPDATE users SET refresh_token = NULL WHERE id=${req.user.id}`);
-  // Wait, the original code sets refresh_token to NULL for the user? That clears ALL refresh tokens.
-  // Then it appends the valid one?
-  // "UPDATE users SET refresh_token = array_append(refresh_token, $1) WHERE id = $2"
-  // It seems the original code was trying to rotate but might be buggy or I'm misinterpreting.
-  // It sets NULL then appends isValidToken. So it clears all sessions except the current one?
-  // Just copying logic for now.
-
   await pool.query(`UPDATE users SET refresh_token = NULL WHERE id=$1`, [
     userCookieRefreshToken.id,
   ]);
 
-  // Re-saving the hashed valid token back.
-  // Wait, if we want to rotate, we should generate a NEW refresh token.
-  // But the original code re-saves 'isValidToken' which is the OLD hashed token.
-  // Then issues a NEW Access Token.
-  // It does NOT seem to issue a NEW refresh token in the response, only access token.
-  // So the refresh token stays the same?
-
-  // Checking original code again:
-  // const accessToken = generateAccessToken({ id: userPayload.id });
-  // return sendResponse(res, { data: {token: accessToken} });
-
-  // Yes, it only returns access token.
 
   await pool.query(
     `UPDATE users SET refresh_token = array_append(refresh_token, $1) WHERE id = $2`,
@@ -273,16 +251,10 @@ export const sendPasswordResetOtp = async (email) => {
 export const verifyPasswordOtp = async (data) => {
   const { email, otpCode, sessionToken } = data;
 
-  // sessionToken verification happens in controller or here?
-  // Here logic needs sessionToken to verify session?
-  // Controller checked sessionToken existence.
-  // Logic:verify session -> get email?
-  // User passed email in body.
 
   const session = jwt.verify(sessionToken, env.REFRESH_TOKEN_SECRET);
   if (!session) throw new Error("invalid session id");
 
-  // Check if email matches session? Original code didn't explicitly check mismatch but used email from body.
 
   const getCodeDataFromCache = await client.get(email);
   if (!getCodeDataFromCache) throw new Error("otp code has expired");
@@ -323,9 +295,7 @@ export const resetPassword = async (data) => {
     `UPDATE users SET password_hash = $1, refresh_token=NULL WHERE email=$2`,
     [newHashedPassword, email],
   );
-  // Note: Added clearing refresh tokens on password change for security (best practice usually, but checking original code... original code didn't clear refresh tokens. It only updated password hash.).
-  // Original: await pool.query(`UPDATE users SET password_hash = $1`, [newHashedPassword]);
-  // I will stick to original logic to avoid changing behavior implicitly.
+
 
   await pool.query(`UPDATE users SET password_hash = $1`, [newHashedPassword]);
 
@@ -339,10 +309,6 @@ export const sendEmailUpdateOtp = async (inputEmail) => {
   );
   if (emailExists.rowCount !== 0) {
     throw new Error("new email can not be thesame as the recent email");
-    // Logic check: if email exists in DB, it might be TAKEN by another user?
-    // Original msg: "new email can not be thesame as the recent email" implies it checked if it's strictly the same?
-    // But query checks if ANY logic has it.
-    // If I change email to one that exists, it should probably fail.
   }
 
   const otpData = await sendCode(inputEmail);

@@ -82,30 +82,6 @@ export const sendNotification = async (
 export const getNotifications = async (userId, page, limit) => {
   const offset = (page - 1) * limit;
 
-  // Original controller used cache. Should service use cache? Yes.
-  // But original controller `notification.controller.js` logic for cache key was:
-  // `notification:page:${page}:offset:${offset}` -> Wait, offset is derived from page/limit.
-  // Original: `const cacheKey = \`notification:page:${page}:offset:${offset}\`;`
-  // I prefer consistent cache keys.
-
-  // Also, importing client from redis config?
-  // I need to add import if not present.
-  // The previous view of file showed only `import pool`.
-  // So I need to add `import { client } ...` at top.
-
-  // For now, let's write the functions and I'll add import in another chunk.
-
-  // I need `client` for caching.
-
-  /*
-    const cacheKey = `notification:user:${userId}:page:${page}:limit:${limit}`;
-    const cachedData = await client.get(cacheKey);
-    if (cachedData) return JSON.parse(cachedData);
-    */
-
-  // Wait, I can't access `client` unless I import it.
-  // So I will start with adding import.
-
   const [data, count] = await Promise.all([
     pool.query(
       `
@@ -133,7 +109,7 @@ export const getNotifications = async (userId, page, limit) => {
   const totalPages = Math.ceil(total / limit);
   const result = {
     data: {
-      notifications: data.rows, // Original: data.rows
+      notifications: data.rows,
     },
     meta: {
       page,
@@ -145,7 +121,6 @@ export const getNotifications = async (userId, page, limit) => {
     },
   };
 
-  // await client.setEx(cacheKey, 60, JSON.stringify(result));
   return result;
 };
 
@@ -156,10 +131,8 @@ export const markAsRead = async (userId, notificationId) => {
       `UPDATE notifications SET is_read=true WHERE is_read=false AND user_id=$1 RETURNING *`,
       [userId],
     );
-    if (notification.rowCount === 0) return null; // Or throw error? Original threw 400 "failed to update..."
+    if (notification.rowCount === 0) return null;
     return notification.rows[0];
-    // Original returned rows[0]. If multiple updated, returns first?
-    // Yes. "updatedNotification = notificaiton.rows[0]"
   }
 
   const notification = await pool.query(

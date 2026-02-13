@@ -82,6 +82,68 @@ Ensure your PostgreSQL database is running and the schema is set up. You may nee
 
 See [API_DOCS.md](./API_DOCS.md) for detailed endpoint information.
 
+You can also view the [Postman Documentation](https://documenter.getpostman.com/view/45206479/2sBXcBnMsA).
+
+## Wrapper Documentation (Socket.IO)
+
+The application uses Socket.IO for real-time updates.
+
+### Connection
+
+```javascript
+const socket = io("http://localhost:8080", {
+  auth: {
+    token: "YOUR_JWT_TOKEN",
+  },
+});
+```
+
+### Events
+
+#### Client -> Server (Emitters)
+
+| Event           | Payload                | Description                                  |
+| :-------------- | :--------------------- | :------------------------------------------- |
+| `join:post`     | `{ postId }`           | Join a room for a specific post.             |
+| `leave:post`    | `{ postId }`           | Leave a post room.                           |
+| `join:comment`  | `{ postId }`           | Join room for top-level comments of a post.  |
+| `leave:comment` | `{ postId }`           | Leave top-level comments room.               |
+| `join:reply`    | `{ postId, parentId }` | Join room for replies to a specific comment. |
+| `leave:reply`   | `{ postId, parentId }` | Leave replies room.                          |
+
+#### Server -> Client (Listeners)
+
+**Posts**
+
+- `post:new`: Receives new post data.
+- `post:updated`: Receives updated post data.
+- `post:deleted`: Receives deleted post ID/data.
+- `post:reactionLike`: Receives like reaction data.
+- `post:reactionDislike`: Receives dislike reaction data.
+
+**Comments**
+
+- `comment:new`: Receives new comment data.
+- `comment:updated`: Receives updated comment data.
+- `comment:deleted`: Receives deleted comment data.
+- `comment:reactionLike`: Receives like reaction on comment.
+- `comment:reactionDislike`: Receives dislike reaction on comment.
+
+**Replies**
+
+- `reply:new`: Receives new reply data.
+- `reply:updated`: Receives updated reply data.
+- `reply:deleted`: Receives deleted reply data.
+
+**Notifications**
+
+- `notification`: Receives user-specific notifications.
+
+**Errors**
+
+- `tokenExpired`: specific error event.
+- `unauthorized`: specific error event.
+
 ## Project Structure
 
 - `controllers/`: Handles incoming HTTP requests and responses.

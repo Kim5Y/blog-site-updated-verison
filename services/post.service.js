@@ -36,13 +36,7 @@ export const createPost = async (userId, postData, req) => {
 
   const newPost = result.rows[0];
 
-  // Handling socket emission within service if req is passed, or return data to controller to emit.
-  // The original controller uses `req.io`.
-  // I will pass `req` to service for now to keep it simple, or I should separate concerns strictly?
-  // Ideally service returns data, controller emits.
-  // But `notifications.service.js` takes `req`.
-  // So I will act consistently and pass `req` if needed or return data.
-  // `sendNotification` takes `req` to emit.
+  
 
   if (req && req.io) {
     req.io.to(`category-${category}`).emit("post:new", newPost);

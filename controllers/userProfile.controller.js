@@ -8,21 +8,12 @@ export default async (req, res) => {
     const limit = parseInt(req.query.limit) || 10;
     const page = parseInt(req.query.page) || 1;
 
-    // Service validations
-    // Service throws Error if userId is invalid.
-
-    // Original controller check: if (!userId) -> invalid user id. if (isNaN(userId)) -> invalid userId.
-
     const response = await UserService.getUserProfile(userId, page, limit);
 
     return sendResponse(res, response);
   } catch (err) {
     console.log(err);
     if (err.message === "invalid user id" || err.message === "invalid userId") {
-      return new ApiError(res, { message: err.message, statuscode: 400 }); // or 404?
-      // Original controller: if (!userId) -> message: "invalid user id" (no status, so 500 default?)
-      // if (isNaN(userId)) -> statuscode: 400.
-      // Service throws "invalid user id" or "invalid userId".
     }
     if (err.message === "user not found") {
       return new ApiError(res, { statuscode: 404, message: "user not found" });

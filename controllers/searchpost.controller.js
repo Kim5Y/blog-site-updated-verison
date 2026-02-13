@@ -24,11 +24,6 @@ export default async (req, res) => {
       },
     };
 
-    // Redis caching logic was commented out in original controller.
-    // I'll leave it out or implement it?
-    // "await client.setEx(redistKey, 60, JSON.stringify(results));" was commented out.
-    // So I won't implement it.
-
     return sendResponse(res, { data: { postResult, usersResult } });
   } catch (err) {
     console.log(err);

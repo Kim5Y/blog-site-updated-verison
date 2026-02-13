@@ -48,22 +48,6 @@ export const addComment = async (commentData, req) => {
       });
     }
 
-    // Also notify post owner if it's not the same person?
-    // Original controller logic:
-    /*
-        if (parentId) { ... sendNotification(reply...); return ... }
-        */
-    // Original logic returns after reply. So it only notifies parent comment owner, NOT post owner?
-    // Let's verify original logic.
-    /*
-        if (parentId) {
-          ... insert ...
-          if (useId != parentcomment.user_id) { sendNotification(...) }
-          return sendResponse(...)
-        }
-        */
-    // Yes, it returns.
-
     return { type: "reply", data: newReply };
   }
 
@@ -109,28 +93,15 @@ export const deleteComment = async (commentId, userId, req) => {
     const comment = result.rows[0];
 
     if (comment.user_id !== userId) {
-      // Check if user is POST owner? Original logic:
-      /*
-            if (result.rows[0].user_id !== req.user.id) {
-                // check if it is the owner of the post
-                const post = await pool.query(`SELECT * FROM posts WHERE id = $1`, [comment.post_id]);
-                if (post.rows[0].user_id !== req.user.id) {
-                    return new ApiError(res, { message: "invalid", statuscode: 403 });
-                }
-            }
-            */
-      // So logic: Comment Owner OR Post Owner can delete.
-
       const postQuery = await pool.query(`SELECT * FROM posts WHERE id = $1`, [
         comment.post_id,
       ]);
-      // If post doesn't exist? (Should exist due to foreign key, but safety)
+     
       if (postQuery.rowCount > 0) {
         if (postQuery.rows[0].user_id !== userId) {
           throw new Error("unauthorized");
         }
       } else {
-        // If post deleted, comment might be gone strictly, but if we are here...
         throw new Error("unauthorized");
       }
     }
@@ -164,10 +135,6 @@ export const getPostComments = async (postId, page, limit) => {
   );
 
   if (allComments.length === 0) {
-    // Service returns null or empty array? Controller returned 404.
-    // I will return empty data structure or throw specific error?
-    // Returning null/empty seems better than throwing error for "no comments".
-    // But original controller returns 404 "No comments found".
     return null;
   }
 

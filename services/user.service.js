@@ -1,6 +1,6 @@
 import pool from "../config/db.config.js";
 import { client } from "../config/redis.config.js";
-import ApiError from "../utils/error.utils.js"; // Needed? Service usually throws Error, controller handles ApiError.
+import ApiError from "../utils/error.utils.js";
 
 export const getUserProfile = async (userId, page, limit) => {
   if (!userId) throw new Error("invalid user id");
@@ -35,16 +35,7 @@ export const getUserProfile = async (userId, page, limit) => {
       `SELECT COUNT(*) FROM posts WHERE user_id =$1`,
       [userId],
     );
-    userPosts = userPostsQuery.rows; // Controller used rows[0] but that seems wrong for list of posts? Controller: `userPosts = userPostsQuery.rows[0];` -> This assigns FIRST post to userPosts.
-    // Wait, looking at controller `userProfile.controller.js`:
-    // `userPosts = userPostsQuery.rows[0];`
-    // If query returns multiple rows, `rows[0]` is just the first one.
-    // `userPosts` variable name implies plural, but controller logic assigns single object?
-    // Let's check the response structure in controller: `data: { userInfo, userPosts }`.
-    // If it's a list, it should be `userPostsQuery.rows`.
-    // `userPostsQuery` is `SELECT ... FROM posts ... LIMIT ...`. This returns multiple rows.
-    // I suspect the original code had a bug where it only returned the first post or `rows` was accessed incorrectly.
-    // I will fix it to return `rows`.
+    userPosts = userPostsQuery.rows;
 
     userPosts = userPostsQuery.rows;
     postCount = postCountQuery.rows[0];
@@ -63,8 +54,6 @@ export const getUserProfile = async (userId, page, limit) => {
 };
 
 export const logout = async (userId, cookiesRefreshToken) => {
-  // Controller logic: clears cookie (controller job), updates DB.
-
   await pool.query(
     `UPDATE users
          SET refresh_token = ARRAY[]::text[]
@@ -76,7 +65,6 @@ export const logout = async (userId, cookiesRefreshToken) => {
 };
 
 export const updateUserProfile = async (userId, payload) => {
-  // Validation logic from controller
   const updates = [];
   const values = [];
   let idx = 1;
@@ -88,10 +76,7 @@ export const updateUserProfile = async (userId, payload) => {
     ) {
       throw new Error("username must be at least 3 characters");
     }
-    // Check if username is same as current (needs current user fetch?)
-    // Controller checked: `if (payload.username === req.user.username)`
-    // I should probably pass current username or fetch it.
-    // Fetching is safer.
+
     const currentUser = await pool.query(
       "SELECT user_name FROM users WHERE id=$1",
       [userId],
@@ -104,7 +89,7 @@ export const updateUserProfile = async (userId, payload) => {
       "SELECT user_name FROM users WHERE user_name=$1",
       [payload.username],
     );
-    if (userExists.rowCount !== 0) throw new Error("invalid username"); // Taken
+    if (userExists.rowCount !== 0) throw new Error("invalid username");
 
     updates.push(`user_name = $${idx++}`);
     values.push(payload.username.trim());
@@ -151,7 +136,7 @@ export const updateUserProfile = async (userId, payload) => {
   values.push(userId);
   const result = await pool.query(query, values);
 
-  if (result.rowCount === 0) throw new Error("user not found"); // Should not happen if userId is from token
+  if (result.rowCount === 0) throw new Error("user not found");
 
   return result.rows[0];
 };
