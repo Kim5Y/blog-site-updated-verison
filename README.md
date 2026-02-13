@@ -75,7 +75,7 @@ Ensure your PostgreSQL database is running and the schema is set up. You may nee
 
 - Production start:
   ```bash
-  npm start
+  npm start:prod
   ```
 
 ## API Documentation
